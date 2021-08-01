@@ -1,8 +1,8 @@
 {:paths ["src" "resources"]
  :deps  {}
  :aliases
- {:run-m   {:main-opts ["-m" "wildwestrom.lifetime-calendar.model"]}
-  :run-x   {:ns-default wildwestrom.lifetime-calendar.model
+ {:run-m   {:main-opts ["-m" "wildwestrom.death-calendar.model"]}
+  :run-x   {:ns-default wildwestrom.death-calendar.model
             :exec-fn    greet
             :exec-args  {:name "Clojure"}}
   :test {:extra-paths ["test"]
@@ -13,6 +13,6 @@
   :uberjar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
             :exec-fn      hf.depstar/uberjar
             :exec-args    {:aot        true
-                           :jar        "lifetime-calendar.jar"
-                           :main-class "wildwestrom.lifetime-calendar.model"
+                           :jar        "death-calendar.jar"
+                           :main-class "wildwestrom.death-calendar.model"
                            :sync-pom   true}}}}

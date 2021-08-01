@@ -46,6 +46,6 @@ jobs:
           key: v1-dependencies-clj-{{ checksum "deps.edn" }}
 
 workflows:
-  build:
+  test:
     jobs:
       - test

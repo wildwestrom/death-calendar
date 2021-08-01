@@ -1,4 +1,8 @@
-* Lifetime Calendar
+* Death Calendar [[https://img.shields.io/circleci/build/github/wildwestrom/death-calendar/main.svg]]
+
+  Ever wonder how many days you have left to live?\\
+  Death Calendar can show you at a glance.
+
   This is an exercise in test-driven development.
 
 ** TODO Installation
@@ -6,7 +10,7 @@
 ** TODO Develop
 
 ** License
-Lifetime Calendar: See how many days you have left to live at a glance.\\
+Death Calendar: See how many days you have left to live at a glance.\\
 Copyright © 2021 Christian Westrom
 
 This program is free software: you can redistribute it and/or modify
