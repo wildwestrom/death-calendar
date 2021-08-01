@@ -1,4 +1,4 @@
-* Sidereal Time Clock
+* Lifetime Calendar
   This is an exercise in test-driven development.
 
 ** TODO Installation
@@ -6,7 +6,7 @@
 ** TODO Develop
 
 ** License
-Local sidereal time clock.\\
+Lifetime Calendar: See how many days you have left to live at a glance.\\
 Copyright © 2021 Christian Westrom
 
 This program is free software: you can redistribute it and/or modify
