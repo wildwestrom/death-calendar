@@ -5,6 +5,8 @@
 *.class
 /.calva/output-window/
 /.cpcache
+/.idea
+*.iml
 /.lein-*
 /.lsp/sqlite*.db
 /.nrepl-history

@@ -14,7 +14,7 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-(ns wildwestrom.lifetime-calendar
+(ns wildwestrom.lifetime-calendar.model
   (:import (java.time LocalDate)
            (java.time.temporal TemporalAmount ChronoUnit))
   (:gen-class))

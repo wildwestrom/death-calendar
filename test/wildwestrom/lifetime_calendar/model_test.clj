@@ -14,9 +14,9 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-(ns wildwestrom.lifetime-calendar-test
+(ns wildwestrom.lifetime-calendar.model-test
   (:require [clojure.test :refer [deftest testing is are]]
-            [wildwestrom.lifetime-calendar :as sut])
+            [wildwestrom.lifetime-calendar.model :as sut])
   (:import (java.time LocalDate Period)))
 
 (deftest death-day
