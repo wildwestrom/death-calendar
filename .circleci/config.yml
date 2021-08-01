@@ -33,9 +33,8 @@ jobs:
             - v1-dependencies-
 
       # run tests!
-      - run: |
-          mkdir -p test-results
-          clj -M:test
+      - run: mkdir -p test-results
+      - run: clojure -M:test
 
       - store_test_results:
           path: test-results
