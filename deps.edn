@@ -1,19 +1,18 @@
 {:paths ["src" "resources"]
- :deps {org.clojure/clojure {:mvn/version "1.10.3"}}
+ :deps  {}
  :aliases
- {:run-m {:main-opts ["-m" "wildwestrom.lifetime-calendar"]}
-  :run-x {:ns-default wildwestrom.lifetime-calendar
-          :exec-fn greet
-          :exec-args {:name "Clojure"}}
+ {:run-m   {:main-opts ["-m" "wildwestrom.lifetime-calendar.model"]}
+  :run-x   {:ns-default wildwestrom.lifetime-calendar.model
+            :exec-fn    greet
+            :exec-args  {:name "Clojure"}}
   :test {:extra-paths ["test"]
-         :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}
-                      io.github.cognitect-labs/test-runner
-                      {:git/url "https://github.com/cognitect-labs/test-runner"
-                       :sha "62ef1de18e076903374306060ac0e8a752e57c86"}}
-         :exec-fn cognitect.test-runner.api/test}
+         :extra-deps  {org.clojure/test.check {:mvn/version "1.1.0"}
+                       lambdaisland/kaocha {:mvn/version "1.0.861"}
+                       lambdaisland/kaocha-junit-xml {:mvn/version "0.0.76"}}
+         :main-opts   ["-m" "kaocha.runner"]}
   :uberjar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
-            :exec-fn hf.depstar/uberjar
-            :exec-args {:aot true
-                        :jar "lifetime-calendar.jar"
-                        :main-class "wildwestrom.lifetime-calendar"
-                        :sync-pom true}}}}
+            :exec-fn      hf.depstar/uberjar
+            :exec-args    {:aot        true
+                           :jar        "lifetime-calendar.jar"
+                           :main-class "wildwestrom.lifetime-calendar.model"
+                           :sync-pom   true}}}}

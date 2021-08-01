@@ -5,10 +5,10 @@
 version: 2.1
 
 jobs:
-  build:
+  test:
     docker:
       # specify the version you desire here
-      - image: circleci/clojure:lein-2.9.5
+      - image: circleci/clojure:tools-deps-node
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -28,21 +28,25 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-            - v1-dependencies-{{ checksum "project.clj" }}
+            - v1-dependencies-clj-{{ checksum "deps.edn" }}
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
 
-      - run: lein deps
+      # run tests!
+      - run: |
+          mkdir -p test-results
+          clj -M:test
+
+      - store_test_results:
+          path: test-results
+
 
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-dependencies-{{ checksum "project.clj" }}
-
-      # run tests!
-      - run: lein test
+          key: v1-dependencies-clj-{{ checksum "deps.edn" }}
 
 workflows:
   build:
     jobs:
-      - build
+      - test
