@@ -1,4 +1,4 @@
-;; Lifetime Calendar: See how many days you have left to live at a glance.
+;; Death Calendar: See how many days you have left to live at a glance.
 ;; Copyright © 2021 Christian Westrom
 
 ;; This program is free software: you can redistribute it and/or modify
@@ -14,9 +14,9 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-(ns wildwestrom.lifetime-calendar.model-test
+(ns wildwestrom.death-calendar.model-test
   (:require [clojure.test :refer [deftest testing is are]]
-            [wildwestrom.lifetime-calendar.model :as sut])
+            [wildwestrom.death-calendar.model :as sut])
   (:import (java.time LocalDate Period)))
 
 (deftest death-day
