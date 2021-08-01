@@ -15,14 +15,34 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 (ns wildwestrom.lifetime-calendar
+  (:import (java.time LocalDate)
+           (java.time.temporal TemporalAmount ChronoUnit))
   (:gen-class))
 
-(defn greet
-  "Callable entry point to the application."
-  [data]
-  (println (str "Hello, " (or (:name data) "World") "!")))
+(defn death-day
+  [^LocalDate birth-day ^TemporalAmount life-span]
+  (.plus birth-day life-span))
 
-(defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
-  (greet {:name (first args)}))
+(defn life-span-days
+  [^LocalDate birth-day ^TemporalAmount life-span]
+  (.between ChronoUnit/DAYS
+            birth-day
+            (death-day birth-day life-span)))
+
+(defn days-left
+  [^LocalDate birth-day ^TemporalAmount life-span]
+  (let [calculated (.between ChronoUnit/DAYS
+                             (LocalDate/now)
+                             (death-day birth-day life-span))]
+    (assert (pos? calculated)
+            "Apparently you're dead.")
+    calculated))
+
+(defn calendar-map
+  [^LocalDate birth-day ^TemporalAmount life-span]
+  (let [total-life (life-span-days birth-day life-span)
+        remaining (days-left birth-day life-span)
+        lived (- total-life remaining)]
+    {:total total-life
+     :lived lived
+     :remaining remaining}))
