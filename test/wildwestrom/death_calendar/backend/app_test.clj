@@ -15,7 +15,7 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 (ns wildwestrom.death-calendar.backend.app-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest testing is]]
             [wildwestrom.death-calendar.backend.app :as sut]))
 
 (deftest basic-request-response
