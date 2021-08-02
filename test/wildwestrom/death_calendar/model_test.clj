@@ -15,7 +15,7 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 (ns wildwestrom.death-calendar.model-test
-  (:require [clojure.test :refer [deftest testing is are]]
+  (:require [clojure.test :refer :all]
             [wildwestrom.death-calendar.model :as sut])
   (:import (java.time LocalDate Period)))
 
