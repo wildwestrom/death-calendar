@@ -16,8 +16,12 @@
 
 (ns wildwestrom.death-calendar.backend.app-test
   (:require [clojure.test :refer [deftest testing is]]
-            [wildwestrom.death-calendar.backend.app :as sut]))
+            [wildwestrom.death-calendar.backend.app :as sut]
+            [ring.mock.request :as mock]))
 
 (deftest basic-request-response
-  (testing "Do we get a response?"
-    (is (= 200 (:status (sut/handler))))))
+  (let [resp (sut/app (mock/request :get "/"))]
+     (testing "Do we get some response?"
+       (is (some? resp)))
+     (testing "Do we get a status 200 back?"
+       (is (= 200 (:status resp))))))

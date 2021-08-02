@@ -16,5 +16,5 @@
 
 (ns wildwestrom.death-calendar.backend.app)
 
-(defn handler []
-  {:status 200})
+(defn app []
+  {:status  200})
