@@ -39,19 +39,19 @@
 
 (deftest days-left-to-live
   (testing "Given a lifespan as a `java.time.Period` object, return days left."
-    (dotimes [n 20]
-      (let [days (days-generator)
-            date (date-generator)
-            test-expr #(sut/days-left date (Period/ofDays %))]
-        #_(println (str "run " (inc n) ":"
-                        days " days, "
-                        (format "%.1f" (/ days 365.25)) " years"))
-        (is days (test-expr days))))))
+    (repeatedly 10
+                (let [days      (days-generator)
+                      date      (date-generator)
+                      test-expr #(sut/days-left date (Period/ofDays %))]
+                  #_(println (str "run " (inc n) ":"
+                                  days " days, "
+                                  (format "%.1f" (/ days 365.25)) " years"))
+                  (is days (test-expr days))))))
 
 (deftest calendar-map
-  (testing "Make sure calendar-map is valid."
-    (dotimes [n 10]
-     (let [test-map (sut/calendar-map (date-generator)
-                                      (Period/ofDays (days-generator)))]
-      (is (= (:total test-map) (+ (:lived test-map)
-                              (:remaining test-map))))))))
+  (testing "Make sure calendar-map shows the correct number of days."
+    (repeatedly 10
+                (let [test-map (sut/calendar-map (date-generator)
+                                                 (Period/ofDays (days-generator)))]
+                  (is (= (:total test-map) (+ (:lived test-map)
+                                              (:remaining test-map))))))))
