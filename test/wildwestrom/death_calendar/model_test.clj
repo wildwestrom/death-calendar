@@ -37,17 +37,6 @@
              (rand-nth (let [hundred-years (* 365.25 110)]
                          (range 1 hundred-years)))))
 
-(deftest days-left-to-live
-  (testing "Given a lifespan as a `java.time.Period` object, return days left."
-    (repeatedly 10
-                (let [days      (days-generator)
-                      date      (date-generator)
-                      test-expr #(sut/days-left date (Period/ofDays %))]
-                  #_(println (str "run " (inc n) ":"
-                                  days " days, "
-                                  (format "%.1f" (/ days 365.25)) " years"))
-                  (is days (test-expr days))))))
-
 (deftest calendar-map
   (testing "Make sure calendar-map shows the correct number of days."
     (repeatedly 10
