@@ -1,15 +1,17 @@
 {:paths ["src" "resources"]
- :deps  {ring/ring-mock {:mvn/version "0.4.0"}}
+ :deps  {ring/ring                  {:mvn/version "1.9.4"}
+         ring/ring-mock             {:mvn/version "0.4.0"}
+         http-kit/http-kit          {:mvn/version "2.5.3"}
+         com.stuartsierra/component {:mvn/version "1.0.0"}}
  :aliases
- {:run-m   {:main-opts ["-m" "wildwestrom.death-calendar.model"]}
-  :run-x   {:ns-default wildwestrom.death-calendar.model
-            :exec-fn    greet
-            :exec-args  {:name "Clojure"}}
-  :test {:extra-paths ["test"]
-         :extra-deps  {org.clojure/test.check {:mvn/version "1.1.0"}
-                       lambdaisland/kaocha {:mvn/version "1.0.861"}
-                       lambdaisland/kaocha-junit-xml {:mvn/version "0.0.76"}}
-         :main-opts   ["-m" "kaocha.runner"]}
+ {:dev     {:extra-paths ["dev"]
+            :extra-deps  {ring/ring-devel {:mvn/version "1.6.3"}}
+            :main-opts   ["-m" "hotreload"]}
+  :test    {:extra-paths ["test"]
+            :extra-deps  {org.clojure/test.check        {:mvn/version "1.1.0"}
+                          lambdaisland/kaocha           {:mvn/version "1.0.861"}
+                          lambdaisland/kaocha-junit-xml {:mvn/version "0.0.76"}}
+            :main-opts   ["-m" "kaocha.runner"]}
   :uberjar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
             :exec-fn      hf.depstar/uberjar
             :exec-args    {:aot        true
