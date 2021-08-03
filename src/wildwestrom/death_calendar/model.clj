@@ -34,15 +34,16 @@
   (let [calculated (.between ChronoUnit/DAYS
                              (LocalDate/now)
                              (death-day birth-day life-span))]
-    (assert (pos? calculated)
-            "Apparently you're dead.")
     calculated))
 
 (defn calendar-map
   [^LocalDate birth-day ^TemporalAmount life-span]
   (let [total-life (life-span-days birth-day life-span)
-        remaining (days-left birth-day life-span)
-        lived (- total-life remaining)]
-    {:total total-life
-     :lived lived
-     :remaining remaining}))
+        remaining  (days-left birth-day life-span)
+        lived      (- total-life remaining)
+        cal-map    {:total     total-life
+                    :lived     lived
+                    :remaining remaining}]
+    (if (> 0 remaining)
+      (assoc cal-map :dead? true)
+      cal-map)))

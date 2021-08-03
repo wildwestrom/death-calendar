@@ -54,4 +54,11 @@
                 (let [test-map (sut/calendar-map (date-generator)
                                                  (Period/ofDays (days-generator)))]
                   (is (= (:total test-map) (+ (:lived test-map)
-                                              (:remaining test-map))))))))
+                                              (:remaining test-map)))))))
+  (testing "Give the user an indication that their input is invalid."
+    (let [test-map-gen (fn [birth-day]
+                         (sut/calendar-map birth-day (Period/ofDays (* 80 365.25))))
+          alive-case   (test-map-gen (LocalDate/of 1960 1 1))
+          dead-case    (test-map-gen (LocalDate/of 1930 1 1))]
+      (is (nil? (:dead? alive-case)))
+      (is (true? (:dead? dead-case))))))
