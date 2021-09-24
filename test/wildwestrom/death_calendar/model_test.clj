@@ -17,7 +17,8 @@
 (ns wildwestrom.death-calendar.model-test
   (:require [clojure.test :refer [deftest testing is are]]
             [wildwestrom.death-calendar.model :as sut])
-  (:import (java.time LocalDate Period)))
+  (:import (java.time LocalDate Period)
+           (java.time.temporal ChronoUnit)))
 
 (deftest death-day
   (testing "Given a birthday and lifespan return death-day."
@@ -25,30 +26,51 @@
       (LocalDate/of 2080 1 1)  (LocalDate/of 2000 1 1)  (Period/ofYears 80)
       (LocalDate/of 2098 8 15) (LocalDate/of 1998 8 15) (Period/ofYears 100)
       (LocalDate/of 2000 2 1)  (LocalDate/of 2000 1 1)  (Period/ofMonths 1)
-      (LocalDate/of 2001 1 1)  (LocalDate/of 2000 1 1)  (Period/ofDays 366))))
+      (LocalDate/of 2001 1 1)  (LocalDate/of 2000 1 1)  (Period/ofDays 366)
+      (LocalDate/of 2000 2 29) (LocalDate/of 2000 1 1)  (Period/ofDays (+ 30 29)))))
 
-(defn days-generator
-  []
-  (rand-int (* 365.25 110)))
+(def ^:const long-human-life-years 100)
 
-(defn date-generator
+(defn alive-date-generator
   []
-  (.plusDays (LocalDate/now)
-             (rand-nth (let [hundred-years (* 365.25 110)]
-                         (range 1 hundred-years)))))
+  (.plusYears (LocalDate/now)
+              (rand-nth (range (+ 1 (- long-human-life-years)) long-human-life-years))))
+
+(defn dead-date-generator
+  []
+  (.plusYears (LocalDate/now)
+              (rand-nth (range (- (* 2 long-human-life-years))
+                               (- (- long-human-life-years) 1)))))
 
 (deftest calendar-map
-  (testing "Give the user an indication that their input is invalid."
-    (let [test-map-gen (fn [birth-day]
-                         (sut/calendar-map birth-day (Period/ofDays (* 80 365.25))))
-          alive-case   (test-map-gen (LocalDate/of 1960 1 1))
-          dead-case    (test-map-gen (LocalDate/of 1930 1 1))]
-      (is (nil? (:dead? alive-case)))
-      (is (true? (:dead? dead-case)))))
-  (testing "Has all required fields."
-    (let [test-cal-map (sut/calendar-map (LocalDate/of 1921 1 1) (Period/ofWeeks (* 52 80)))]
-      (is (some? (:lived test-cal-map)))
-      (is (some? (:total test-cal-map)))
-      (is (some? (:dead? test-cal-map)))))
-  (testing "Extra flags for different units of time."
-    (is (map? (sut/calendar-map (LocalDate/of 1985 2 14) (Period/ofWeeks (* 52 80)))))))
+  (dotimes [x 1000]
+    (let [date (alive-date-generator)
+          dead-date (dead-date-generator)
+          num-of-years  long-human-life-years
+          num-of-months (* 12 num-of-years)
+          num-of-weeks  (* 52 num-of-years)]
+      (println (str x ": " date))
+      (testing "Give the user an indication that their input is invalid."
+        (let [test-map-gen (fn [birth-day]
+                             (sut/calendar-map birth-day (Period/ofWeeks num-of-weeks)))
+              alive-case   (test-map-gen date)
+              dead-case    (test-map-gen dead-date)]
+          (is (nil? (:dead? alive-case)))
+          (is (true? (:dead? dead-case)))))
+
+      (testing "Has all required fields."
+        (let [test-cal-map (sut/calendar-map dead-date (Period/ofWeeks num-of-weeks))]
+          (is (some? (:lived test-cal-map)))
+          (is (some? (:total test-cal-map)))
+          (is (some? (:remaining test-cal-map)))
+          (is (some? (:dead? test-cal-map)))))
+
+      (testing "Extra flags for different units of time."
+        (is (= (sut/calendar-map date (Period/ofWeeks num-of-weeks))
+               (sut/calendar-map date (Period/ofWeeks num-of-weeks) :unit ChronoUnit/DAYS)))
+        (are [num-of period unit]
+             (= (:total (sut/calendar-map date (period num-of) :unit unit))
+                num-of)
+          num-of-years Period/ofYears ChronoUnit/YEARS
+          num-of-months Period/ofMonths ChronoUnit/MONTHS
+          num-of-weeks Period/ofWeeks ChronoUnit/WEEKS)))))

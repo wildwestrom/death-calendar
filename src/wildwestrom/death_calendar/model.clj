@@ -19,27 +19,32 @@
            (java.time.temporal TemporalAmount ChronoUnit))
   (:gen-class))
 
+(set! *warn-on-reflection* true)
+
 (defn death-day
   [^LocalDate birth-day ^TemporalAmount life-span]
   (.plus birth-day life-span))
 
 (defn total-days
-  [^LocalDate birth-day ^TemporalAmount life-span]
-  (.between ChronoUnit/DAYS
+  [^LocalDate birth-day ^TemporalAmount life-span ^ChronoUnit unit]
+  (.between unit
             birth-day
             (death-day birth-day life-span)))
 
 (defn lived-days
-  [^LocalDate birth-day ^TemporalAmount life-span]
-  (let [calculated (.between ChronoUnit/DAYS
+  [^LocalDate birth-day ^TemporalAmount life-span ^ChronoUnit unit]
+  (let [calculated (.between unit
                              (LocalDate/now)
                              (death-day birth-day life-span))]
     calculated))
 
 (defn calendar-map
-  [^LocalDate birth-day ^TemporalAmount life-span]
-  (let [total-life (total-days birth-day life-span)
-        remaining  (lived-days birth-day life-span)
+  [^LocalDate birth-day
+   ^TemporalAmount life-span
+   & {:keys [unit]
+      :or {unit ChronoUnit/DAYS}}]
+  (let [total-life (total-days birth-day life-span unit)
+        remaining  (lived-days birth-day life-span unit)
         lived      (- total-life remaining)
         cal-map    {:total     total-life
                     :lived     lived
