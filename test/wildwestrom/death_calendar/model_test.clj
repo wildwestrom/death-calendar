@@ -38,16 +38,17 @@
                          (range 1 hundred-years)))))
 
 (deftest calendar-map
-  (testing "Make sure calendar-map shows the correct number of days."
-    (repeatedly 10
-                (let [test-map (sut/calendar-map (date-generator)
-                                                 (Period/ofDays (days-generator)))]
-                  (is (= (:total test-map) (+ (:lived test-map)
-                                              (:remaining test-map)))))))
   (testing "Give the user an indication that their input is invalid."
     (let [test-map-gen (fn [birth-day]
                          (sut/calendar-map birth-day (Period/ofDays (* 80 365.25))))
           alive-case   (test-map-gen (LocalDate/of 1960 1 1))
           dead-case    (test-map-gen (LocalDate/of 1930 1 1))]
       (is (nil? (:dead? alive-case)))
-      (is (true? (:dead? dead-case))))))
+      (is (true? (:dead? dead-case)))))
+  (testing "Has all required fields."
+    (let [test-cal-map (sut/calendar-map (LocalDate/of 1921 1 1) (Period/ofWeeks (* 52 80)))]
+      (is (some? (:lived test-cal-map)))
+      (is (some? (:total test-cal-map)))
+      (is (some? (:dead? test-cal-map)))))
+  (testing "Extra flags for different units of time."
+    (is (map? (sut/calendar-map (LocalDate/of 1985 2 14) (Period/ofWeeks (* 52 80)))))))

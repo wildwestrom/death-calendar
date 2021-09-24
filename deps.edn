@@ -1,15 +1,18 @@
 {:paths ["src" "resources"]
- :deps  {ring/ring                  {:mvn/version "1.9.4"}
-         ring/ring-mock             {:mvn/version "0.4.0"}
-         http-kit/http-kit          {:mvn/version "2.5.3"}
-         com.stuartsierra/component {:mvn/version "1.0.0"}}
+ :deps  {ring/ring {:mvn/version "1.9.4"}
+         ring/ring-mock {:mvn/version "0.4.0"}
+         http-kit/http-kit {:mvn/version "2.5.3"}
+         com.stuartsierra/component {:mvn/version "1.0.0"}
+         org.clojure/data.json {:mvn/version "2.4.0"}
+         clj-json/clj-json {:mvn/version "0.5.3"}
+         cheshire/cheshire {:mvn/version "5.10.1"}}
  :aliases
  {:dev     {:extra-paths ["dev"]
             :extra-deps  {ring/ring-devel {:mvn/version "1.6.3"}}
             :main-opts   ["-m" "hotreload"]}
   :test    {:extra-paths ["test"]
-            :extra-deps  {org.clojure/test.check        {:mvn/version "1.1.0"}
-                          lambdaisland/kaocha           {:mvn/version "1.0.861"}
+            :extra-deps  {org.clojure/test.check {:mvn/version "1.1.0"}
+                          lambdaisland/kaocha {:mvn/version "1.0.861"}
                           lambdaisland/kaocha-junit-xml {:mvn/version "0.0.76"}}
             :main-opts   ["-m" "kaocha.runner"]}
   :uberjar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}

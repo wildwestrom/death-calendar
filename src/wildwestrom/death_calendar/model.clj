@@ -23,13 +23,13 @@
   [^LocalDate birth-day ^TemporalAmount life-span]
   (.plus birth-day life-span))
 
-(defn life-span-days
+(defn total-days
   [^LocalDate birth-day ^TemporalAmount life-span]
   (.between ChronoUnit/DAYS
             birth-day
             (death-day birth-day life-span)))
 
-(defn days-left
+(defn lived-days
   [^LocalDate birth-day ^TemporalAmount life-span]
   (let [calculated (.between ChronoUnit/DAYS
                              (LocalDate/now)
@@ -38,8 +38,8 @@
 
 (defn calendar-map
   [^LocalDate birth-day ^TemporalAmount life-span]
-  (let [total-life (life-span-days birth-day life-span)
-        remaining  (days-left birth-day life-span)
+  (let [total-life (total-days birth-day life-span)
+        remaining  (lived-days birth-day life-span)
         lived      (- total-life remaining)
         cal-map    {:total     total-life
                     :lived     lived
