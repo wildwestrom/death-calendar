@@ -38,7 +38,7 @@
                              (death-day birth-day life-span))]
     calculated))
 
-(defn calendar-map
+(defn calendar-data
   [^LocalDate birth-day
    ^TemporalAmount life-span
    & {:keys [unit]

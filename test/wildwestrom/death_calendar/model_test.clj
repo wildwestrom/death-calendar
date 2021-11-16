@@ -16,9 +16,15 @@
 
 (ns wildwestrom.death-calendar.model-test
   (:require [clojure.test :refer [deftest testing is are]]
-            [wildwestrom.death-calendar.model :as sut])
+            [wildwestrom.death-calendar.model :as sut]
+            [clojure.test.check :as tc]
+            [clojure.test.check.generators :as gen]
+            [clojure.test.check.properties :as prop]
+            [clojure.test.check.clojure-test :refer [defspec]])
   (:import (java.time LocalDate Period)
            (java.time.temporal ChronoUnit)))
+
+(def ^:const life-expectancy-years 100)
 
 (deftest death-day
   (testing "Given a birthday and lifespan return death-day."
@@ -29,48 +35,52 @@
       (LocalDate/of 2001 1 1)  (LocalDate/of 2000 1 1)  (Period/ofDays 366)
       (LocalDate/of 2000 2 29) (LocalDate/of 2000 1 1)  (Period/ofDays (+ 30 29)))))
 
-(def ^:const long-human-life-years 100)
+(def date-generator
+  (gen/fmap #(LocalDate/ofEpochDay %)
+            (gen/choose (+ -25550 100)
+                        (+ (* 365 life-expectancy-years)
+                           (.toEpochDay (LocalDate/now))))))
 
-(defn alive-date-generator
-  []
-  (.plusYears (LocalDate/now)
-              (rand-nth (range (+ 1 (- long-human-life-years)) long-human-life-years))))
+(def alive-date-generator
+  (gen/fmap #(.plusYears (LocalDate/now) %)
+            (gen/choose
+             (+ 1 (- life-expectancy-years))
+             life-expectancy-years)))
 
-(defn dead-date-generator
-  []
-  (.plusYears (LocalDate/now)
-              (rand-nth (range (- (* 2 long-human-life-years))
-                               (- (- long-human-life-years) 1)))))
+(def dead-date-generator
+  (gen/fmap #(.plusYears (LocalDate/now) %)
+            (gen/choose
+             (- (* 2 life-expectancy-years))
+             (- (- life-expectancy-years) 1))))
 
-(deftest calendar-map
-  (dotimes [x 1000]
-    (let [date (alive-date-generator)
-          dead-date (dead-date-generator)
-          num-of-years  long-human-life-years
-          num-of-months (* 12 num-of-years)
-          num-of-weeks  (* 52 num-of-years)]
-      (println (str x ": " date))
-      (testing "Give the user an indication that their input is invalid."
-        (let [test-map-gen (fn [birth-day]
-                             (sut/calendar-map birth-day (Period/ofWeeks num-of-weeks)))
-              alive-case   (test-map-gen date)
-              dead-case    (test-map-gen dead-date)]
-          (is (nil? (:dead? alive-case)))
-          (is (true? (:dead? dead-case)))))
+(defspec given-an-alive-date-there-is-no-dead-field
+  (prop/for-all [bday alive-date-generator]
+                (-> (sut/calendar-data
+                     bday
+                     (Period/ofYears life-expectancy-years))
+                    :dead?
+                    nil?)))
 
-      (testing "Has all required fields."
-        (let [test-cal-map (sut/calendar-map dead-date (Period/ofWeeks num-of-weeks))]
-          (is (some? (:lived test-cal-map)))
-          (is (some? (:total test-cal-map)))
-          (is (some? (:remaining test-cal-map)))
-          (is (some? (:dead? test-cal-map)))))
+(defspec given-a-dead-date-dead-is-true
+  (prop/for-all [bday dead-date-generator]
+                (-> (sut/calendar-data
+                     bday
+                     (Period/ofYears life-expectancy-years))
+                    :dead?
+                    true?)))
 
-      (testing "Extra flags for different units of time."
-        (is (= (sut/calendar-map date (Period/ofWeeks num-of-weeks))
-               (sut/calendar-map date (Period/ofWeeks num-of-weeks) :unit ChronoUnit/DAYS)))
-        (are [num-of period unit]
-             (= (:total (sut/calendar-map date (period num-of) :unit unit))
-                num-of)
-          num-of-years Period/ofYears ChronoUnit/YEARS
-          num-of-months Period/ofMonths ChronoUnit/MONTHS
-          num-of-weeks Period/ofWeeks ChronoUnit/WEEKS)))))
+(defspec output-contains-all-required-fields
+  (prop/for-all [output (gen/fmap
+                         #(sut/calendar-data
+                           % (Period/ofYears life-expectancy-years))
+                         dead-date-generator)]
+                (and (int? (:lived output))
+                     (int? (:total output))
+                     (int? (:remaining output))
+                     (boolean? (:dead? output)))))
+
+(defspec ChronoUnit-days-is-equal-to-no-ChronoUnit-specified
+  (prop/for-all [date date-generator
+                 num-of-weeks (gen/fmap #(Period/ofWeeks %) (gen/fmap #(* 52 %) (gen/choose -100 100)))]
+                (is (= (sut/calendar-data date num-of-weeks)
+                       (sut/calendar-data date num-of-weeks :unit ChronoUnit/DAYS)))))
