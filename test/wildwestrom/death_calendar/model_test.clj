@@ -36,18 +36,23 @@
       (LocalDate/of 2000 2 29) (LocalDate/of 2000 1 1)  (Period/ofDays (+ 30 29)))))
 
 (def date-generator
+  "Generates a date from 1900-01-01 to a lifetime from now."
   (gen/fmap #(LocalDate/ofEpochDay %)
-            (gen/choose (+ -25550 100)
+            (gen/choose -25567
                         (+ (* 365 life-expectancy-years)
                            (.toEpochDay (LocalDate/now))))))
 
 (def alive-date-generator
+  "Generates a birthday such that a person with that birthday
+  is not older than a given life expectancy."
   (gen/fmap #(.plusYears (LocalDate/now) %)
             (gen/choose
              (+ 1 (- life-expectancy-years))
              life-expectancy-years)))
 
 (def dead-date-generator
+  "Generates a birthday such that a person with that birthday
+  is older than a given life expectancy."
   (gen/fmap #(.plusYears (LocalDate/now) %)
             (gen/choose
              (- (* 2 life-expectancy-years))
