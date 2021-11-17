@@ -17,7 +17,6 @@
 (ns wildwestrom.death-calendar.model-test
   (:require [clojure.test :refer [deftest testing is are]]
             [wildwestrom.death-calendar.model :as sut]
-            [clojure.test.check :as tc]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
             [clojure.test.check.clojure-test :refer [defspec]])
@@ -84,7 +83,7 @@
                      (int? (:remaining output))
                      (boolean? (:dead? output)))))
 
-(defspec ChronoUnit-days-is-equal-to-no-ChronoUnit-specified
+(defspec ChronoUnit-DAYS-is-equal-to-no-ChronoUnit-specified
   (prop/for-all [date date-generator
                  num-of-weeks (gen/fmap #(Period/ofWeeks %) (gen/fmap #(* 52 %) (gen/choose -100 100)))]
                 (is (= (sut/calendar-data date num-of-weeks)
