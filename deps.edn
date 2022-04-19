@@ -1,24 +1,11 @@
 {:paths ["src" "resources"]
- :deps  {ring/ring {:mvn/version "1.9.4"}
-         ring/ring-mock {:mvn/version "0.4.0"}
-         http-kit/http-kit {:mvn/version "2.5.3"}
-         com.stuartsierra/component {:mvn/version "1.0.0"}
-         org.clojure/data.json {:mvn/version "2.4.0"}
-         clj-json/clj-json {:mvn/version "0.5.3"}
-         cheshire/cheshire {:mvn/version "5.10.1"}
-         org.clojure/test.check {:mvn/version "1.1.0"}}
+ :deps  {}
  :aliases
- {:dev     {:extra-paths ["dev"]
-            :extra-deps  {ring/ring-devel {:mvn/version "1.6.3"}}
-            :main-opts   ["-m" "hotreload"]}
-  :test    {:extra-paths ["test"]
-            :extra-deps  {org.clojure/test.check {:mvn/version "1.1.0"}
-                          lambdaisland/kaocha {:mvn/version "1.0.861"}
+ {:test    {:extra-paths ["test"]
+            :extra-deps  {org.clojure/test.check {:mvn/version "1.1.1"}
+                          lambdaisland/kaocha {:mvn/version "1.65.1029"}
                           lambdaisland/kaocha-junit-xml {:mvn/version "0.0.76"}}
             :main-opts   ["-m" "kaocha.runner"]}
-  :uberjar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
-            :exec-fn      hf.depstar/uberjar
-            :exec-args    {:aot        true
-                           :jar        "death-calendar.jar"
-                           :main-class "wildwestrom.death-calendar.model"
-                           :sync-pom   true}}}}
+  :build {:extra-deps {io.github.clojure/tools.build {:git/tag "v0.8.1" :git/sha "4a3b58f"}
+                       io.github.seancorfield/build-clj {:git/tag "v0.8.0" :git/sha "9bd8b8a"}}
+          :ns-default build}}}
