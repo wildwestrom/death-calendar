@@ -38,17 +38,22 @@
                              (death-day birth-day life-span))]
     calculated))
 
+(defn alive? [birth-day life-span]
+  (let [remaining  (lived-days birth-day life-span ChronoUnit/DAYS)]
+    (if (> 0 remaining)
+      false
+      true)))
+
 (defn calendar-data
   [^LocalDate birth-day
    ^TemporalAmount life-span
    & {:keys [unit]
-      :or {unit ChronoUnit/DAYS}}]
+      :or   {unit ChronoUnit/DAYS}}]
   (let [total-life (total-days birth-day life-span unit)
         remaining  (lived-days birth-day life-span unit)
-        lived      (- total-life remaining)
-        cal-map    {:total     total-life
-                    :lived     lived
-                    :remaining remaining}]
-    (if (> 0 remaining)
-      (assoc cal-map :dead? true)
-      cal-map)))
+        alive      (alive? birth-day life-span)
+        lived      (- total-life remaining)]
+    {:total     total-life
+     :lived     lived
+     :remaining remaining
+     :alive     alive}))

@@ -35,11 +35,11 @@
       (LocalDate/of 2000 2 29) (LocalDate/of 2000 1 1)  (Period/ofDays (+ 30 29))
       (LocalDate/of 2095 2 28) (LocalDate/of 1996 2 29) (Period/ofYears 99))))
 
-(def date-generator
+(def recent-date-generator
   "Generates a date from 1900-01-01 to a lifetime from now."
   (gen/fmap #(LocalDate/ofEpochDay %)
             (gen/choose -25567
-                        (+ (* 365 life-expectancy-years)
+                        (+ (int (* 365.25 life-expectancy-years))
                            (.toEpochDay (LocalDate/now))))))
 
 (def alive-date-generator
@@ -58,34 +58,20 @@
              (- (* 2 life-expectancy-years))
              (- (- life-expectancy-years) 1))))
 
-(defspec given-an-alive-date-there-is-no-dead-field
+(defspec given-an-alive-date-return-true
   (prop/for-all [bday alive-date-generator]
-                (-> (sut/calendar-data
-                     bday
-                     (Period/ofYears life-expectancy-years))
-                    :dead?
-                    nil?)))
+                (true? (sut/alive?
+                        bday
+                        (Period/ofYears life-expectancy-years)))))
 
-(defspec given-a-dead-date-dead-is-true
+(defspec given-a-dead-date-dead-return-false
   (prop/for-all [bday dead-date-generator]
-                (-> (sut/calendar-data
-                     bday
-                     (Period/ofYears life-expectancy-years))
-                    :dead?
-                    true?)))
-
-(defspec output-contains-all-required-fields
-  (prop/for-all [output (gen/fmap
-                         #(sut/calendar-data
-                           % (Period/ofYears life-expectancy-years))
-                         dead-date-generator)]
-                (and (int? (:lived output))
-                     (int? (:total output))
-                     (int? (:remaining output))
-                     (boolean? (:dead? output)))))
+                (false? (sut/alive?
+                         bday
+                         (Period/ofYears life-expectancy-years)))))
 
 (defspec ChronoUnit-DAYS-is-equal-to-no-ChronoUnit-specified
-  (prop/for-all [date date-generator
+  (prop/for-all [date recent-date-generator
                  num-of-weeks (gen/fmap #(Period/ofWeeks %)
                                         (gen/fmap #(* 52 %)
                                                   (gen/choose -100 100)))]
