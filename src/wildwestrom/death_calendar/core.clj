@@ -1,4 +1,4 @@
-;; Death Calendar: See how many days you have left to live at a glance.\
+;; Death Calendar: See how many days you have left to live at a glance.
 ;; Copyright © 2021 Christian Westrom
 
 ;; This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-(ns wildwestrom.death-calendar.model
+(ns wildwestrom.death-calendar.core
   (:import (java.time LocalDate)
            (java.time.temporal TemporalAmount ChronoUnit))
   (:gen-class))

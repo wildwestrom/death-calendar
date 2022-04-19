@@ -14,9 +14,9 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-(ns wildwestrom.death-calendar.model-test
+(ns wildwestrom.death-calendar.core-test
   (:require [clojure.test :refer [deftest testing is are]]
-            [wildwestrom.death-calendar.model :as sut]
+            [wildwestrom.death-calendar.core :as sut]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
             [clojure.test.check.clojure-test :refer [defspec]])
@@ -32,7 +32,8 @@
       (LocalDate/of 2098 8 15) (LocalDate/of 1998 8 15) (Period/ofYears 100)
       (LocalDate/of 2000 2 1)  (LocalDate/of 2000 1 1)  (Period/ofMonths 1)
       (LocalDate/of 2001 1 1)  (LocalDate/of 2000 1 1)  (Period/ofDays 366)
-      (LocalDate/of 2000 2 29) (LocalDate/of 2000 1 1)  (Period/ofDays (+ 30 29)))))
+      (LocalDate/of 2000 2 29) (LocalDate/of 2000 1 1)  (Period/ofDays (+ 30 29))
+      (LocalDate/of 2095 2 28) (LocalDate/of 1996 2 29) (Period/ofYears 99))))
 
 (def date-generator
   "Generates a date from 1900-01-01 to a lifetime from now."
@@ -85,6 +86,8 @@
 
 (defspec ChronoUnit-DAYS-is-equal-to-no-ChronoUnit-specified
   (prop/for-all [date date-generator
-                 num-of-weeks (gen/fmap #(Period/ofWeeks %) (gen/fmap #(* 52 %) (gen/choose -100 100)))]
+                 num-of-weeks (gen/fmap #(Period/ofWeeks %)
+                                        (gen/fmap #(* 52 %)
+                                                  (gen/choose -100 100)))]
                 (is (= (sut/calendar-data date num-of-weeks)
                        (sut/calendar-data date num-of-weeks :unit ChronoUnit/DAYS)))))
