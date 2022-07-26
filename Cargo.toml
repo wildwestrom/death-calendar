@@ -2,6 +2,12 @@
 name = "death-calendar"
 version = "0.1.0"
 edition = "2021"
+description = "Calculates how long you have until your ultimate demise as a mortal."
+license = "GPL-3.0-or-later"
+repository = "todo"
+readme = "README.org"
+keywords = ["life", "death", "time", "calendar"]
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https: //doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -10,4 +16,4 @@ chrono = "0.4.19"
 clap = { version = "3.2.15", features = ["unstable-doc"] }
 date_time_parser = "0.1.1"
 gregorian = "0.2.3"
-svg = "0.10.0"
+svg = "0.10"
