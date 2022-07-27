@@ -1,5 +1,8 @@
-{:paths ["src" "resources"]
- :deps  {}
+{:paths ["src" "resources" "spec"]
+ :deps  {org.clojure/clojure {:mvn/version "1.11.1"}
+         org.clojure/clojurescript {:mvn/version "1.11.4"}
+         cljc.java-time/cljc.java-time {:mvn/version "0.1.18"}
+         tick/tick {:mvn/version "0.5.0-RC5"}}
  :aliases
  {:test    {:extra-paths ["test"]
             :extra-deps  {org.clojure/test.check {:mvn/version "1.1.1"}
