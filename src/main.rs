@@ -112,15 +112,6 @@ fn death_info(bday: Date, years: i16) {
 fn render_svg(bday: Date, years: i16, d: &Dimensions) -> Document {
     let mut document = Document::new().set("viewBox", (0, 0, d.width, d.height));
 
-    let bg = Rectangle::new()
-        .set("x", 0)
-        .set("y", 0)
-        .set("width", "100%")
-        .set("height", "100%")
-        .set("fill", "white");
-
-    document.append(bg);
-
     let today = Date::today_utc();
     let end = death_day(bday, years);
 
