@@ -2,7 +2,7 @@
 name = "death-calendar"
 version = "0.1.0"
 edition = "2021"
-description = "Calculates how long you have until your ultimate demise as a mortal."
+description = "Calculate how much time you have until your ultimate demise as a mortal."
 license = "GPL-3.0-or-later"
 repository = "todo"
 readme = "README.org"

@@ -1,5 +1,4 @@
-#![allow(unused_variables)]
-use std::{error::Error, fmt};
+use std::{error::Error, fmt, num::ParseIntError, path::PathBuf};
 
 use clap::Parser;
 use death_calendar::{
@@ -9,28 +8,85 @@ use death_calendar::{
 use gregorian::Date;
 use svg::{node::element::Rectangle, Document, Node};
 
-#[derive(Debug)]
-struct ParseDateError;
-
-impl Error for ParseDateError {}
-
-impl fmt::Display for ParseDateError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("Could not parse input date")
-    }
-}
-
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    /// A birthday in `YYYY-MM-DD` format.
-    birthday: Date,
-    /// Expected lifespan in years.
-    #[clap(short, long, default_value_t = 100)]
-    lifespan_years: i16,
-    /// Render svg calendar.
-    #[clap(short, long)]
-    svg: bool,
+    #[clap(subcommand)]
+    command: Commands,
+}
+
+#[derive(Parser, Debug)]
+enum Commands {
+    /// Print info about your ultimate demise
+    Info {
+        /// A birthday in `YYYY-MM-DD` format.
+        birthday: Date,
+        /// Expected lifespan in years.
+        #[clap(short, long, default_value_t = 100)]
+        lifespan_years: i16,
+    },
+    /// Generate an SVG Image of the calendar
+    Svg {
+        /// A birthday in `YYYY-MM-DD` format.
+        birthday: Date,
+        /// Expected lifespan in years.
+        #[clap(short, long, default_value_t = 100)]
+        lifespan_years: i16,
+        #[clap(short, long, value_parser, default_value_t = Dimensions {width: 1920, height: 1080})]
+        dimensions: Dimensions,
+        #[clap(short, long)]
+        output: Option<PathBuf>,
+    },
+}
+
+#[derive(Debug, Clone)]
+struct Dimensions {
+    width: i16,
+    height: i16,
+}
+
+impl fmt::Display for Dimensions {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_fmt(format_args!("{}x{}", self.width, self.height))
+    }
+}
+
+impl Default for Dimensions {
+    fn default() -> Self {
+        Self {
+            width: Default::default(),
+            height: Default::default(),
+        }
+    }
+}
+
+#[derive(Debug)]
+struct ParseDimensionsError;
+
+impl Error for ParseDimensionsError {}
+
+impl fmt::Display for ParseDimensionsError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("Could not parse input dimensions. Expected format `WxH`.")
+    }
+}
+
+impl From<ParseIntError> for ParseDimensionsError {
+    fn from(_: ParseIntError) -> Self {
+        ParseDimensionsError
+    }
+}
+
+impl std::str::FromStr for Dimensions {
+    type Err = ParseDimensionsError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let tokens: Vec<&str> = s.split('x').collect();
+        let width = i16::from_str(tokens.first().ok_or(ParseDimensionsError)?)?;
+        let height = i16::from_str(tokens.last().ok_or(ParseDimensionsError)?)?;
+
+        Ok(Self { width, height })
+    }
 }
 
 fn death_info(bday: Date, years: i16) {
@@ -51,11 +107,8 @@ fn death_info(bday: Date, years: i16) {
     println!("- {} years", years_left(today, bday, years).abs());
 }
 
-fn render_svg(bday: Date, lifespan_years: i16) {
-    let w = 1920;
-    let h = 1080;
-
-    let mut document = Document::new().set("viewBox", (0, 0, w, h));
+fn render_svg(bday: Date, years: i16, d: &Dimensions) -> Document {
+    let mut document = Document::new().set("viewBox", (0, 0, d.width, d.height));
 
     let bg = Rectangle::new()
         .set("x", 0)
@@ -67,23 +120,20 @@ fn render_svg(bday: Date, lifespan_years: i16) {
     document.append(bg);
 
     let today = Date::today_utc();
-    let end = death_day(bday, lifespan_years);
-    let lived = weeks_lived(today, bday);
-
-    let count = bday.days_since(end);
+    let end = death_day(bday, years);
 
     let weeks_in_year = 52;
 
     let mut count = 0;
     let mut curr_date = bday;
-    let outer_square_size: f64 = (h / weeks_in_year).min(w / lifespan_years).into();
+    let outer_square_size: f64 = (d.height / weeks_in_year).min(d.width / years).into();
     let padding = outer_square_size as f64 * 0.2;
 
     while curr_date < end {
         let fill = if curr_date < today { "black" } else { "white" };
-        let x_offset = (f64::from(w) - (outer_square_size * f64::from(lifespan_years))) / 2.0;
+        let x_offset = (f64::from(d.width) - (outer_square_size * f64::from(years))) / 2.0;
         let x = f64::from(count / weeks_in_year).mul_add(outer_square_size, x_offset);
-        let y_offset = (f64::from(h) - (outer_square_size * f64::from(weeks_in_year))) / 2.0;
+        let y_offset = (f64::from(d.height) - (outer_square_size * f64::from(weeks_in_year))) / 2.0;
         let y = f64::from(count % weeks_in_year).mul_add(outer_square_size, y_offset);
         let square = Rectangle::new()
             .set("x", x)
@@ -105,22 +155,33 @@ fn render_svg(bday: Date, lifespan_years: i16) {
         count += 1;
     }
 
-    println!("{}", document.to_string());
+    document
 }
 
 fn main() {
     // Use these blocks of code for testing purposes.
-    // let args = Args::parse_from(["death-calendar", "--svg", "1997-9-2", "-l", "100"]);
-    // let args = Args::parse_from(["death-calendar", "2000-01-01", "-l", "100"]);
+    // let args = Args::parse_from(["death-calendar", "info", "1998-07-26", "-l", "100"]);
+    // let args = Args::parse_from(["death-calendar", "svg", "2000-01-01", "-l", "100"]);
     // let args = Args::parse_from(["death-calendar", "--help"]);
 
     let args = Args::parse();
-    let bday = args.birthday;
-    let lifespan_years = args.lifespan_years;
 
-    if args.svg {
-        render_svg(bday, lifespan_years);
-    } else {
-        death_info(bday, lifespan_years);
+    match args.command {
+        Commands::Svg {
+            birthday,
+            lifespan_years,
+            dimensions,
+            output,
+        } => {
+            let document = render_svg(birthday, lifespan_years, &dimensions);
+            output.map_or_else(
+                || println!("{}", document.to_string()),
+                |file| svg::save(file, &document).expect("Couldn't save SVG to file."),
+            );
+        }
+        Commands::Info {
+            birthday,
+            lifespan_years,
+        } => death_info(birthday, lifespan_years),
     }
 }
