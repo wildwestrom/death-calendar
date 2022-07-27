@@ -17,7 +17,7 @@ struct Args {
 
 #[derive(Parser, Debug)]
 enum Commands {
-    /// Print info about your ultimate demise
+    /// Print info about your ultimate demise.
     Info {
         /// A birthday in `YYYY-MM-DD` format.
         birthday: Date,
@@ -25,15 +25,17 @@ enum Commands {
         #[clap(short, long, default_value_t = 100)]
         lifespan_years: i16,
     },
-    /// Generate an SVG Image of the calendar
+    /// Generate an SVG Image of the calendar.
     Svg {
         /// A birthday in `YYYY-MM-DD` format.
         birthday: Date,
         /// Expected lifespan in years.
         #[clap(short, long, default_value_t = 100)]
         lifespan_years: i16,
+        /// Dimensions of your SVG in `WxH` format.
         #[clap(short, long, value_parser, default_value_t = Dimensions {width: 1920, height: 1080})]
         dimensions: Dimensions,
+        /// Save SVG to a file instead of printing to stdout.
         #[clap(short, long)]
         output: Option<PathBuf>,
     },
