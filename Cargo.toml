@@ -2,9 +2,9 @@
 name = "death-calendar"
 version = "0.1.0"
 edition = "2021"
-description = "Calculate how much time you have until your ultimate demise as a mortal."
-license = "GPL-3.0-or-later"
-repository = "todo"
+description = "Calculate how much time you have until your ultimate demise."
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/wildwestrom/death-calendar"
 readme = "README.org"
 keywords = ["life", "death", "time", "calendar"]
 categories = ["command-line-utilities"]
