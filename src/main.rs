@@ -38,7 +38,7 @@ enum Commands {
     Svg {
         #[clap(flatten)]
         common_args: CommonArgs,
-        /// Dimensions of your SVG in `WxH` format.
+        /// Save SVG to a file instead of printing to stdout.
         #[clap(short, long)]
         output: Option<PathBuf>,
     },
@@ -62,6 +62,11 @@ fn death_info(bday: Date, years: i16) {
     println!("- {} years", years_left(today, bday, years).abs());
 }
 
+struct Ratio {
+    padding: i16,
+    square: i16,
+}
+
 const WEEKS_IN_A_YEAR: i16 = 52;
 fn render_svg(bday: Date, years: i16) -> Document {
     let color_primary = "black";
@@ -75,8 +80,12 @@ fn render_svg(bday: Date, years: i16) -> Document {
 
     // Adding a scale factor seems to make the image render more crisply.
     let scale_factor = 4;
-    let inner_square_size = 12 * scale_factor;
-    let padding = 1 * scale_factor;
+    let padding_to_square_ratio = Ratio {
+        padding: 1,
+        square: 12,
+    };
+    let inner_square_size = padding_to_square_ratio.square * scale_factor;
+    let padding = padding_to_square_ratio.padding * scale_factor;
     let outer_square_size = inner_square_size + (padding * 3);
 
     let border_size = 2;
