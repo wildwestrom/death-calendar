@@ -19,37 +19,37 @@ struct Args {
 // This should work for now until https://github.com/clap-rs/clap/issues/1546 is resolved.
 #[derive(Parser, Debug)]
 struct CommonArgs {
-    /// A birthday in `YYYY-MM-DD` format.
+    /// A birthday in `YYYY-MM-DD` format
     birthday: Date,
-    /// Expected lifespan in years.
+    /// Expected lifespan in years
     #[clap(short, long, default_value_t = 100)]
     lifespan_years: i16,
 }
 
 #[derive(Debug, Clone, clap::ValueEnum)]
 enum BorderUnit {
-    Square,
     Pixel,
+    Square,
 }
 
 // This won't work until https://github.com/clap-rs/clap/issues/1546 is fixed.
 #[derive(Parser, Debug)]
 enum Commands {
-    /// Print info about your ultimate demise.
+    /// Print info about your ultimate demise
     Info {
         #[clap(flatten)]
         common_args: CommonArgs,
     },
-    /// Generate an SVG Image of the calendar.
+    /// Generate an SVG Image of the calendar
     Svg {
         #[clap(flatten)]
         common_args: CommonArgs,
-        /// Save SVG to a file instead of printing to stdout.
+        /// Save SVG to a file instead of printing to stdout
         #[clap(short, long)]
         output: Option<PathBuf>,
-        /// Units used to measure the border around the calendar.
+        /// How to measure space around calendar
         #[clap(short, long, value_enum, default_value_t = BorderUnit::Pixel)]
-        border_units: BorderUnit,
+        border_unit: BorderUnit,
     },
 }
 
@@ -83,7 +83,7 @@ struct Scale {
 }
 
 const WEEKS_IN_A_YEAR: i16 = 52;
-fn render_svg(bday: Date, years: i16, border_unit: BorderUnit) -> Document {
+fn render_svg(bday: Date, years: i16, border_unit: &BorderUnit) -> Document {
     let color_primary = "black";
     let color_secondary = "white";
 
@@ -104,15 +104,10 @@ fn render_svg(bday: Date, years: i16, border_unit: BorderUnit) -> Document {
     let inner_square_size = drawing_ratios.square * scale_factor;
     let outer_square_size = inner_square_size + (padding * 2) + stroke_width;
 
-    let border;
-    match border_unit {
-        BorderUnit::Pixel => {
-            border = drawing_ratios.border;
-        }
-        BorderUnit::Square => {
-            border = drawing_ratios.border * outer_square_size;
-        }
-    }
+    let border = match border_unit {
+        BorderUnit::Pixel => drawing_ratios.border,
+        BorderUnit::Square => drawing_ratios.border * outer_square_size,
+    };
 
     let padding_x2 = padding * 2;
     let grid_width = outer_square_size * years + padding_x2;
@@ -192,14 +187,14 @@ fn main() {
     match args.command {
         Commands::Svg {
             output,
-            border_units,
+            border_unit,
             // This should work for now until https://github.com/clap-rs/clap/issues/1546 is resolved.
             common_args,
         } => {
             let document = render_svg(
                 common_args.birthday,
                 common_args.lifespan_years,
-                border_units,
+                &border_unit,
             );
             output.map_or_else(
                 || println!("{}", document),
