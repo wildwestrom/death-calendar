@@ -26,6 +26,12 @@ struct CommonArgs {
     lifespan_years: i16,
 }
 
+#[derive(Debug, Clone, clap::ValueEnum)]
+enum BorderUnit {
+    Square,
+    Pixel,
+}
+
 // This won't work until https://github.com/clap-rs/clap/issues/1546 is fixed.
 #[derive(Parser, Debug)]
 enum Commands {
@@ -41,6 +47,9 @@ enum Commands {
         /// Save SVG to a file instead of printing to stdout.
         #[clap(short, long)]
         output: Option<PathBuf>,
+        /// Units used to measure the border around the calendar.
+        #[clap(short, long, value_enum, default_value_t = BorderUnit::Pixel)]
+        border_units: BorderUnit,
     },
 }
 
@@ -62,37 +71,55 @@ fn death_info(bday: Date, years: i16) {
     println!("- {} years", years_left(today, bday, years).abs());
 }
 
-struct Ratio {
+struct Scale {
+    // How thick should the line around the square be?
+    stroke: i16,
+    // How much space should be around each square?
     padding: i16,
+    // How big should the square be on the inside?
     square: i16,
+    // How much space should be around the grid?
+    border: i16,
 }
 
 const WEEKS_IN_A_YEAR: i16 = 52;
-fn render_svg(bday: Date, years: i16) -> Document {
+fn render_svg(bday: Date, years: i16, border_unit: BorderUnit) -> Document {
     let color_primary = "black";
     let color_secondary = "white";
 
     let today = Date::today_utc();
     let end = death_day(bday, years);
 
-    let mut count = 0;
-    let mut curr_date = bday;
-
     // Adding a scale factor seems to make the image render more crisply.
-    let scale_factor = 4;
-    let padding_to_square_ratio = Ratio {
+    let scale_factor = 1; // Ensure this scale factor is greater than 0.
+    let drawing_ratios = Scale {
+        stroke: 1,
         padding: 1,
-        square: 12,
+        square: 15,
+        border: 3,
     };
-    let inner_square_size = padding_to_square_ratio.square * scale_factor;
-    let padding = padding_to_square_ratio.padding * scale_factor;
-    let outer_square_size = inner_square_size + (padding * 3);
+    let stroke_width = drawing_ratios.stroke * 2;
 
-    let border_size = 2;
-    let grid_width = outer_square_size * years;
-    let grid_height = outer_square_size * WEEKS_IN_A_YEAR;
-    let viewbox_width = years * outer_square_size + outer_square_size * border_size;
-    let viewbox_height = WEEKS_IN_A_YEAR * outer_square_size + outer_square_size * border_size;
+    let padding = drawing_ratios.padding * scale_factor;
+    let inner_square_size = drawing_ratios.square * scale_factor;
+    let outer_square_size = inner_square_size + (padding * 2) + stroke_width;
+
+    let border;
+    match border_unit {
+        BorderUnit::Pixel => {
+            border = drawing_ratios.border;
+        }
+        BorderUnit::Square => {
+            border = drawing_ratios.border * outer_square_size;
+        }
+    }
+
+    let padding_x2 = padding * 2;
+    let grid_width = outer_square_size * years + padding_x2;
+    let grid_height = outer_square_size * WEEKS_IN_A_YEAR + padding_x2;
+
+    let viewbox_width = grid_width + (border * 2);
+    let viewbox_height = grid_height + (border * 2);
 
     let mut document = Document::new()
         .set("viewBox", (0, 0, viewbox_width, viewbox_height))
@@ -107,15 +134,18 @@ fn render_svg(bday: Date, years: i16) -> Document {
 
     document.append(background);
 
+    let mut count = 0;
+    let mut curr_date = bday;
     while curr_date < end {
         let fill = if curr_date < today {
             color_primary
         } else {
             color_secondary
         };
-        let x_offset = (viewbox_width - grid_width) / 2;
+        let p2 = (padding * 2) + drawing_ratios.stroke;
+        let x_offset = ((viewbox_width - grid_width) / 2) + p2;
         let x = ((count / WEEKS_IN_A_YEAR) * outer_square_size) + x_offset;
-        let y_offset = (viewbox_height - grid_height) / 2;
+        let y_offset = ((viewbox_height - grid_height) / 2) + p2;
         let y = ((count % WEEKS_IN_A_YEAR) * outer_square_size) + y_offset;
         let square = Rectangle::new()
             .set("x", x)
@@ -124,7 +154,7 @@ fn render_svg(bday: Date, years: i16) -> Document {
             .set("height", inner_square_size)
             .set("fill", fill)
             .set("stroke", color_primary)
-            .set("stroke-width", padding);
+            .set("stroke-width", stroke_width);
 
         document.append(square);
         /* All this below is just to make sure there are always 52 weeks. To do this, we change the
@@ -162,10 +192,15 @@ fn main() {
     match args.command {
         Commands::Svg {
             output,
+            border_units,
             // This should work for now until https://github.com/clap-rs/clap/issues/1546 is resolved.
             common_args,
         } => {
-            let document = render_svg(common_args.birthday, common_args.lifespan_years);
+            let document = render_svg(
+                common_args.birthday,
+                common_args.lifespan_years,
+                border_units,
+            );
             output.map_or_else(
                 || println!("{}", document),
                 |file| svg::save(file, &document).expect("Couldn't save SVG to file."),
