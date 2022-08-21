@@ -29,7 +29,7 @@ struct CommonArgs {
 #[derive(Debug, Clone, clap::ValueEnum)]
 enum BorderUnit {
     Pixel,
-    Square,
+    Shape,
 }
 
 // This won't work until https://github.com/clap-rs/clap/issues/1546 is fixed.
@@ -50,7 +50,57 @@ enum Commands {
         /// How to measure space around calendar
         #[clap(short, long, value_enum, default_value_t = BorderUnit::Pixel)]
         border_unit: BorderUnit,
+        /// Ratios used to create the image.
+        /// Comma separated list of integers in order:
+        /// [stroke_width,padding,shape_length,border_size]
+        #[clap(short = 'r', long = "ratios", value_parser, default_value = "1,1,15,3", name = "RATIO_STRING")]
+        drawing_ratios: DrawingRatios,
     },
+}
+
+#[derive(Debug)]
+struct ParseDrawingRatiosError;
+
+impl std::fmt::Display for ParseDrawingRatiosError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Could not parse the ratio string")
+    }
+}
+
+impl std::error::Error for ParseDrawingRatiosError {}
+
+impl std::str::FromStr for DrawingRatios {
+    type Err = ParseDrawingRatiosError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let split_str: Vec<&str> = s.split(',').collect();
+        let ratio_vals: Vec<i16> = split_str.iter().filter_map(|n| i16::from_str(n).ok()).collect();
+        if ratio_vals.len() > 4 {
+            return Err(ParseDrawingRatiosError);
+        }
+        let stroke = ratio_vals[0];
+        let padding = ratio_vals[1];
+        let length = ratio_vals[2];
+        let border = ratio_vals[3];
+        Ok(Self {
+            stroke,
+            padding,
+            length,
+            border,
+        })
+    }
+}
+
+#[derive(Debug, Clone)]
+struct DrawingRatios {
+    // How thick should the line around the shape be?
+    stroke: i16,
+    // How much space should be around each shape?
+    padding: i16,
+    // How long should the shape be on the inside?
+    length: i16,
+    // How much space should be around the grid?
+    border: i16,
 }
 
 fn death_info(bday: Date, years: i16) {
@@ -71,19 +121,13 @@ fn death_info(bday: Date, years: i16) {
     println!("- {} years", years_left(today, bday, years).abs());
 }
 
-struct Scale {
-    // How thick should the line around the square be?
-    stroke: i16,
-    // How much space should be around each square?
-    padding: i16,
-    // How big should the square be on the inside?
-    square: i16,
-    // How much space should be around the grid?
-    border: i16,
-}
-
 const WEEKS_IN_A_YEAR: i16 = 52;
-fn render_svg(bday: Date, years: i16, border_unit: &BorderUnit) -> Document {
+fn render_svg(
+    bday: Date,
+    years: i16,
+    drawing_ratios: &DrawingRatios,
+    border_unit: &BorderUnit,
+) -> Document {
     let color_primary = "black";
     let color_secondary = "white";
 
@@ -92,26 +136,20 @@ fn render_svg(bday: Date, years: i16, border_unit: &BorderUnit) -> Document {
 
     // Adding a scale factor seems to make the image render more crisply.
     let scale_factor = 1; // Ensure this scale factor is greater than 0.
-    let drawing_ratios = Scale {
-        stroke: 1,
-        padding: 1,
-        square: 15,
-        border: 3,
-    };
     let stroke_width = drawing_ratios.stroke * 2;
 
     let padding = drawing_ratios.padding * scale_factor;
-    let inner_square_size = drawing_ratios.square * scale_factor;
-    let outer_square_size = inner_square_size + (padding * 2) + stroke_width;
+    let inner_shape_size = drawing_ratios.length * scale_factor;
+    let outer_shape_size = inner_shape_size + (padding * 2) + stroke_width;
 
     let border = match border_unit {
         BorderUnit::Pixel => drawing_ratios.border,
-        BorderUnit::Square => drawing_ratios.border * outer_square_size,
+        BorderUnit::Shape => drawing_ratios.border * outer_shape_size,
     };
 
     let padding_x2 = padding * 2;
-    let grid_width = outer_square_size * years + padding_x2;
-    let grid_height = outer_square_size * WEEKS_IN_A_YEAR + padding_x2;
+    let grid_width = outer_shape_size * years + padding_x2;
+    let grid_height = outer_shape_size * WEEKS_IN_A_YEAR + padding_x2;
 
     let viewbox_width = grid_width + (border * 2);
     let viewbox_height = grid_height + (border * 2);
@@ -139,19 +177,19 @@ fn render_svg(bday: Date, years: i16, border_unit: &BorderUnit) -> Document {
         };
         let p2 = (padding * 2) + drawing_ratios.stroke;
         let x_offset = ((viewbox_width - grid_width) / 2) + p2;
-        let x = ((count / WEEKS_IN_A_YEAR) * outer_square_size) + x_offset;
+        let x = ((count / WEEKS_IN_A_YEAR) * outer_shape_size) + x_offset;
         let y_offset = ((viewbox_height - grid_height) / 2) + p2;
-        let y = ((count % WEEKS_IN_A_YEAR) * outer_square_size) + y_offset;
-        let square = Rectangle::new()
+        let y = ((count % WEEKS_IN_A_YEAR) * outer_shape_size) + y_offset;
+        let shape = Rectangle::new()
             .set("x", x)
             .set("y", y)
-            .set("width", inner_square_size)
-            .set("height", inner_square_size)
+            .set("width", inner_shape_size)
+            .set("height", inner_shape_size)
             .set("fill", fill)
             .set("stroke", color_primary)
             .set("stroke-width", stroke_width);
 
-        document.append(square);
+        document.append(shape);
         /* All this below is just to make sure there are always 52 weeks. To do this, we change the
         number of days in a week and skip the 29th of February whenever it comes. */
         let week_length = if count % 52 == 0 { 8 } else { 7 };
@@ -188,12 +226,14 @@ fn main() {
         Commands::Svg {
             output,
             border_unit,
+            drawing_ratios,
             // This should work for now until https://github.com/clap-rs/clap/issues/1546 is resolved.
             common_args,
         } => {
             let document = render_svg(
                 common_args.birthday,
                 common_args.lifespan_years,
+                &drawing_ratios,
                 &border_unit,
             );
             output.map_or_else(
