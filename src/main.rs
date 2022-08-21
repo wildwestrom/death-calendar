@@ -7,7 +7,10 @@ use death_calendar::{
 
 use clap::Parser;
 use gregorian::Date;
-use svg::{node::element::Rectangle, Document, Node};
+use svg::{
+    node::element::{Circle, Element, Rectangle},
+    Document, Node,
+};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -30,6 +33,12 @@ struct CommonArgs {
 enum BorderUnit {
     Pixel,
     Shape,
+}
+
+#[derive(Debug, Clone, clap::ValueEnum)]
+enum SvgShape {
+    Square,
+    Circle,
 }
 
 // This won't work until https://github.com/clap-rs/clap/issues/1546 is fixed.
@@ -61,6 +70,9 @@ enum Commands {
             name = "RATIO_STRING"
         )]
         drawing_ratios: DrawingRatios,
+        #[clap(short, long, value_enum, default_value_t = SvgShape::Square)]
+        /// Shape used to represent a week
+        shape: SvgShape,
     },
 }
 
@@ -136,6 +148,7 @@ fn render_svg(
     years: i16,
     drawing_ratios: &DrawingRatios,
     border_unit: &BorderUnit,
+    shape_type: &SvgShape,
 ) -> Document {
     let color_primary = "black";
     let color_secondary = "white";
@@ -144,25 +157,27 @@ fn render_svg(
     let end = death_day(bday, years);
 
     // Adding a scale factor seems to make the image render more crisply.
-    let scale_factor = 2; // Ensure this scale factor is greater than 0.
+    let scale_factor = 1; // Ensure this scale factor is greater than 0.
     let stroke_width = drawing_ratios.stroke * scale_factor * 2;
 
     let padding = drawing_ratios.padding * scale_factor;
     let inner_shape_size = (drawing_ratios.length * 2) * scale_factor + stroke_width;
     let outer_shape_size = inner_shape_size + (padding * 2) + stroke_width;
+    dbg!(outer_shape_size);
 
     let border = match border_unit {
-        BorderUnit::Pixel => drawing_ratios.border,
-        BorderUnit::Shape => drawing_ratios.border * outer_shape_size,
+        BorderUnit::Pixel => drawing_ratios.border * scale_factor,
+        BorderUnit::Shape => drawing_ratios.border * scale_factor * outer_shape_size,
     };
+    dbg!(border);
 
     // In total, the outer dimensions of a shape is a function of its stroke-width x 2,
     // hence the variable `space_around_shape`.
-    let grid_width = (outer_shape_size * years) + stroke_width;
-    let grid_height = (outer_shape_size * WEEKS_IN_A_YEAR) + stroke_width;
+    let grid_width = outer_shape_size * years;
+    let grid_height = outer_shape_size * WEEKS_IN_A_YEAR;
 
-    let viewbox_width = grid_width + (border * 2) + (padding * 2) + (stroke_width / 2);
-    let viewbox_height = grid_height + (border * 2) + (padding * 2) + (stroke_width / 2);
+    let viewbox_width = grid_width + (border * 2) + (padding * 2);
+    let viewbox_height = grid_height + (border * 2) + (padding * 2);
 
     let mut document = Document::new()
         .set("viewBox", (0, 0, viewbox_width, viewbox_height))
@@ -189,18 +204,34 @@ fn render_svg(
         } else {
             color_secondary
         };
-        let x_offset = ((viewbox_width - grid_width) / 2) + padding + stroke_width;
+        let x_offset = ((viewbox_width - grid_width) / 2) + padding + (stroke_width / 2);
         let x = ((count / WEEKS_IN_A_YEAR) * outer_shape_size) + x_offset;
-        let y_offset = ((viewbox_height - grid_height) / 2) + padding + stroke_width;
+        let y_offset = ((viewbox_height - grid_height) / 2) + padding + (stroke_width / 2);
         let y = ((count % WEEKS_IN_A_YEAR) * outer_shape_size) + y_offset;
-        let shape = Rectangle::new()
-            .set("x", x)
-            .set("y", y)
-            .set("width", inner_shape_size)
-            .set("height", inner_shape_size)
-            .set("fill", fill)
-            .set("stroke", color_primary)
-            .set("stroke-width", stroke_width);
+
+        let cx_offset = ((viewbox_width - grid_width) / 2) + (padding / 2) + (outer_shape_size / 2);
+        let cx = ((count / WEEKS_IN_A_YEAR) * outer_shape_size) + cx_offset;
+        let cy_offset = ((viewbox_height - grid_height) / 2) + (padding / 2) + (outer_shape_size / 2);
+        let cy = ((count % WEEKS_IN_A_YEAR) * outer_shape_size) + cy_offset;
+        let shape: Element = match shape_type {
+            SvgShape::Square => Rectangle::new()
+                .set("x", x)
+                .set("y", y)
+                .set("width", inner_shape_size)
+                .set("height", inner_shape_size)
+                .set("fill", fill)
+                .set("stroke", color_primary)
+                .set("stroke-width", stroke_width)
+                .into(),
+            SvgShape::Circle => Circle::new()
+                .set("cx", cx)
+                .set("cy", cy)
+                .set("r", inner_shape_size / 2)
+                .set("fill", fill)
+                .set("stroke", color_primary)
+                .set("stroke-width", stroke_width)
+                .into(),
+        };
 
         document.append(shape);
         /* All this below is just to make sure there are always 52 weeks. To do this, we change the
@@ -240,6 +271,7 @@ fn main() {
             output,
             border_unit,
             drawing_ratios,
+            shape,
             // This should work for now until https://github.com/clap-rs/clap/issues/1546 is resolved.
             common_args,
         } => {
@@ -249,6 +281,7 @@ fn main() {
                 common_args.lifespan_years,
                 &drawing_ratios,
                 &border_unit,
+                &shape,
             );
             output.map_or_else(
                 || println!("{}", document),
