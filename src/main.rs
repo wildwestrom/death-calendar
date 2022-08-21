@@ -163,13 +163,11 @@ fn render_svg(
     let padding = drawing_ratios.padding * scale_factor;
     let inner_shape_size = (drawing_ratios.length * 2) * scale_factor + stroke_width;
     let outer_shape_size = inner_shape_size + (padding * 2) + stroke_width;
-    dbg!(outer_shape_size);
 
     let border = match border_unit {
         BorderUnit::Pixel => drawing_ratios.border * scale_factor,
         BorderUnit::Shape => drawing_ratios.border * scale_factor * outer_shape_size,
     };
-    dbg!(border);
 
     // In total, the outer dimensions of a shape is a function of its stroke-width x 2,
     // hence the variable `space_around_shape`.
@@ -182,10 +180,6 @@ fn render_svg(
     let mut document = Document::new()
         .set("viewBox", (0, 0, viewbox_width, viewbox_height))
         .set("style", format!("background-color:{}", color_primary));
-
-    dbg!(stroke_width);
-    dbg!(viewbox_width - grid_width);
-    dbg!(viewbox_height - grid_height);
 
     let background = Rectangle::new()
         .set("x", 0)
@@ -275,7 +269,6 @@ fn main() {
             // This should work for now until https://github.com/clap-rs/clap/issues/1546 is resolved.
             common_args,
         } => {
-            dbg!(&drawing_ratios);
             let document = render_svg(
                 common_args.birthday,
                 common_args.lifespan_years,
