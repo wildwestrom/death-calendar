@@ -53,7 +53,13 @@ enum Commands {
         /// Ratios used to create the image.
         /// Comma separated list of integers in order:
         /// [stroke_width,padding,shape_length,border_size]
-        #[clap(short = 'r', long = "ratios", value_parser, default_value = "1,1,15,3", name = "RATIO_STRING")]
+        #[clap(
+            short = 'r',
+            long = "ratios",
+            value_parser,
+            default_value = "1,1,15,3",
+            name = "RATIO_STRING"
+        )]
         drawing_ratios: DrawingRatios,
     },
 }
@@ -74,7 +80,10 @@ impl std::str::FromStr for DrawingRatios {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let split_str: Vec<&str> = s.split(',').collect();
-        let ratio_vals: Vec<i16> = split_str.iter().filter_map(|n| i16::from_str(n).ok()).collect();
+        let ratio_vals: Vec<i16> = split_str
+            .iter()
+            .filter_map(|n| i16::from_str(n).ok())
+            .collect();
         if ratio_vals.len() > 4 {
             return Err(ParseDrawingRatiosError);
         }
@@ -135,11 +144,11 @@ fn render_svg(
     let end = death_day(bday, years);
 
     // Adding a scale factor seems to make the image render more crisply.
-    let scale_factor = 1; // Ensure this scale factor is greater than 0.
-    let stroke_width = drawing_ratios.stroke * 2;
+    let scale_factor = 2; // Ensure this scale factor is greater than 0.
+    let stroke_width = drawing_ratios.stroke * scale_factor * 2;
 
     let padding = drawing_ratios.padding * scale_factor;
-    let inner_shape_size = drawing_ratios.length * scale_factor;
+    let inner_shape_size = (drawing_ratios.length * 2) * scale_factor + stroke_width;
     let outer_shape_size = inner_shape_size + (padding * 2) + stroke_width;
 
     let border = match border_unit {
@@ -147,16 +156,21 @@ fn render_svg(
         BorderUnit::Shape => drawing_ratios.border * outer_shape_size,
     };
 
-    let padding_x2 = padding * 2;
-    let grid_width = outer_shape_size * years + padding_x2;
-    let grid_height = outer_shape_size * WEEKS_IN_A_YEAR + padding_x2;
+    // In total, the outer dimensions of a shape is a function of its stroke-width x 2,
+    // hence the variable `space_around_shape`.
+    let grid_width = (outer_shape_size * years) + stroke_width;
+    let grid_height = (outer_shape_size * WEEKS_IN_A_YEAR) + stroke_width;
 
-    let viewbox_width = grid_width + (border * 2);
-    let viewbox_height = grid_height + (border * 2);
+    let viewbox_width = grid_width + (border * 2) + (padding * 2) + (stroke_width / 2);
+    let viewbox_height = grid_height + (border * 2) + (padding * 2) + (stroke_width / 2);
 
     let mut document = Document::new()
         .set("viewBox", (0, 0, viewbox_width, viewbox_height))
         .set("style", format!("background-color:{}", color_primary));
+
+    dbg!(stroke_width);
+    dbg!(viewbox_width - grid_width);
+    dbg!(viewbox_height - grid_height);
 
     let background = Rectangle::new()
         .set("x", 0)
@@ -175,10 +189,9 @@ fn render_svg(
         } else {
             color_secondary
         };
-        let p2 = (padding * 2) + drawing_ratios.stroke;
-        let x_offset = ((viewbox_width - grid_width) / 2) + p2;
+        let x_offset = ((viewbox_width - grid_width) / 2) + padding + stroke_width;
         let x = ((count / WEEKS_IN_A_YEAR) * outer_shape_size) + x_offset;
-        let y_offset = ((viewbox_height - grid_height) / 2) + p2;
+        let y_offset = ((viewbox_height - grid_height) / 2) + padding + stroke_width;
         let y = ((count % WEEKS_IN_A_YEAR) * outer_shape_size) + y_offset;
         let shape = Rectangle::new()
             .set("x", x)
@@ -230,6 +243,7 @@ fn main() {
             // This should work for now until https://github.com/clap-rs/clap/issues/1546 is resolved.
             common_args,
         } => {
+            dbg!(&drawing_ratios);
             let document = render_svg(
                 common_args.birthday,
                 common_args.lifespan_years,
