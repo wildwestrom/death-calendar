@@ -35,9 +35,9 @@ impl std::str::FromStr for DrawingRatios {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let split_str: Vec<&str> = s.split(',').collect();
-        let ratio_vals: Vec<i16> = split_str
+        let ratio_vals: Vec<u32> = split_str
             .iter()
-            .filter_map(|n| i16::from_str(n).ok())
+            .filter_map(|n| u32::from_str(n).ok())
             .collect();
         if ratio_vals.len() > 4 {
             return Err(ParseDrawingRatiosError);
@@ -58,16 +58,16 @@ impl std::str::FromStr for DrawingRatios {
 #[derive(Debug, Clone)]
 pub struct DrawingRatios {
     // How thick should the line around the shape be?
-    stroke: i16,
+    stroke: u32,
     // How much space should be around each shape?
-    padding: i16,
+    padding: u32,
     // How long should the shape be on the inside?
-    length: i16,
+    length: u32,
     // How much space should be around the grid?
-    border: i16,
+    border: u32,
 }
 
-const WEEKS_IN_A_YEAR: i16 = 52;
+const WEEKS_IN_A_YEAR: u32 = 52;
 #[must_use]
 pub fn render_svg(
     bday: Date,
@@ -75,6 +75,7 @@ pub fn render_svg(
     drawing_ratios: &DrawingRatios,
     border_unit: &BorderUnit,
     shape_type: &SvgShape,
+    scale_factor: &u32,
 ) -> Document {
     let color_primary = "black";
     let color_secondary = "white";
@@ -82,8 +83,6 @@ pub fn render_svg(
     let today = Date::today_utc();
     let end = death_day(bday, years);
 
-    // Adding a scale factor seems to make the image render more crisply.
-    let scale_factor = 1; // Ensure this scale factor is greater than 0.
     let stroke_width = drawing_ratios.stroke * scale_factor * 2;
 
     let padding = drawing_ratios.padding * scale_factor;
@@ -97,7 +96,8 @@ pub fn render_svg(
 
     // In total, the outer dimensions of a shape is a function of its stroke-width x 2,
     // hence the variable `space_around_shape`.
-    let grid_width = outer_shape_size * years;
+    let grid_width = outer_shape_size
+        * u32::try_from(years).expect("Couldn't convert number of years to a u32.");
     let grid_height = outer_shape_size * WEEKS_IN_A_YEAR;
 
     let viewbox_width = grid_width + (border * 2) + (padding * 2);

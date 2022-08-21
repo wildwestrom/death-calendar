@@ -7,7 +7,7 @@ use death_calendar::{
 };
 
 use std::path::PathBuf;
-use clap::Parser;
+use clap::{Parser, value_parser};
 use gregorian::Date;
 
 #[derive(Parser, Debug)]
@@ -59,6 +59,11 @@ enum Commands {
         #[clap(short, long, value_enum, default_value_t = SvgShape::Square)]
         /// Shape used to represent a week
         shape: SvgShape,
+        /// Optionally increase the scale of the svg.
+        /// This can help improve scaling quality on some image viewers.
+        /// Must be a number greater than 0.
+        #[clap(short = 'f', long, value_parser(value_parser!(u32).range(1..)), default_value_t = 1)]
+        scale_factor: u32,
     },
 }
 
@@ -103,6 +108,7 @@ fn main() {
             border_unit,
             drawing_ratios,
             shape,
+            scale_factor,
             // This should work for now until https://github.com/clap-rs/clap/issues/1546 is resolved.
             common_args,
         } => {
@@ -112,6 +118,7 @@ fn main() {
                 &drawing_ratios,
                 &border_unit,
                 &shape,
+                &scale_factor,
             );
             output.map_or_else(
                 || println!("{}", document),
