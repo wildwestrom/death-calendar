@@ -119,11 +119,14 @@ pub fn render_svg(
     let mut count = 0;
     let mut curr_date = bday;
     while curr_date < end {
-        let fill = if curr_date < today {
+        // There's an off-by-one error if we do not add 7 days here. It will show that one week has
+        // passed since the person's birthday on their birthday, which is not correct.
+        let fill = if curr_date.add_days(7) <= today {
             color_primary
         } else {
             color_secondary
         };
+
         let x_offset = ((viewbox_width - grid_width) / 2) + padding + (stroke_width / 2);
         let x = ((count / WEEKS_IN_A_YEAR) * outer_shape_size) + x_offset;
         let y_offset = ((viewbox_height - grid_height) / 2) + padding + (stroke_width / 2);
