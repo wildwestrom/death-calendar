@@ -6,9 +6,10 @@ use death_calendar::{
     years_left, years_lived,
 };
 
-use std::path::PathBuf;
-use clap::{Parser, value_parser};
+use clap::{value_parser, Parser};
 use gregorian::Date;
+use hex_color::{HexColor, ParseHexColorError};
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -56,14 +57,22 @@ enum Commands {
             name = "RATIO_STRING"
         )]
         drawing_ratios: DrawingRatios,
-        #[clap(short, long, value_enum, default_value_t = SvgShape::Square)]
+        #[clap(long, value_enum, default_value_t = SvgShape::Square)]
         /// Shape used to represent a week
         shape: SvgShape,
         /// Optionally increase the scale of the svg.
         /// This can help improve scaling quality on some image viewers.
         /// Must be a number greater than 0.
-        #[clap(short = 'f', long, value_parser(value_parser!(u32).range(1..)), default_value_t = 1)]
+        #[clap(long, value_parser(value_parser!(u32).range(1..)), default_value_t = 1)]
         scale_factor: u32,
+        /// Add a primary color.
+        /// You can use any string that matches the <paint> type in the SVG standard.
+        /// https://www.w3.org/Graphics/SVG/1.1/painting.html#SpecifyingPaint
+        #[clap(long, value_parser = clap::builder::ValueParser::new(parse_css2_color), default_value = "black")]
+        color_primary: HexColor,
+        /// Add a secondary color.
+        #[clap(long, value_parser = clap::builder::ValueParser::new(parse_css2_color))]
+        color_secondary: Option<HexColor>,
     },
 }
 
@@ -83,6 +92,30 @@ fn death_info(bday: Date, years: i16) {
     println!("- {} days", days_left(today, bday, years).abs());
     println!("- {} weeks", weeks_left(today, bday, years).abs());
     println!("- {} years", years_left(today, bday, years).abs());
+}
+
+fn parse_css2_color(color: &str) -> Result<HexColor, ParseHexColorError> {
+    let hex_str = match color {
+        "maroon" => "800000",
+        "red" => "ff0000",
+        "orange" => "ffA500",
+        "yellow" => "ffff00",
+        "olive" => "808000",
+        "purple" => "800080",
+        "fuchsia" => "ff00ff",
+        "white" => "ffffff",
+        "lime" => "00ff00",
+        "green" => "008000",
+        "navy" => "000080",
+        "blue" => "0000ff",
+        "aqua" => "00ffff",
+        "teal" => "008080",
+        "black" => "000000",
+        "silver" => "c0c0c0",
+        "gray" => "808080",
+        s => s,
+    };
+    <HexColor as std::str::FromStr>::from_str(hex_str)
 }
 
 fn main() {
@@ -109,6 +142,8 @@ fn main() {
             drawing_ratios,
             shape,
             scale_factor,
+            color_primary,
+            color_secondary,
             // This should work for now until https://github.com/clap-rs/clap/issues/1546 is resolved.
             common_args,
         } => {
@@ -118,7 +153,9 @@ fn main() {
                 &drawing_ratios,
                 &border_unit,
                 &shape,
-                &scale_factor,
+                scale_factor,
+                color_primary,
+                color_secondary,
             );
             output.map_or_else(
                 || println!("{}", document),

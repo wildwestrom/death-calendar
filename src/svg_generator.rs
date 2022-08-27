@@ -1,7 +1,7 @@
-use gregorian::Date;
-
 use death_calendar::death_day;
 
+use gregorian::Date;
+use hex_color::HexColor;
 use svg::{
     node::element::{Circle, Element, Rectangle},
     Document, Node,
@@ -67,6 +67,13 @@ pub struct DrawingRatios {
     border: u32,
 }
 
+const fn invert_color(color: HexColor) -> HexColor {
+    let r = 0xFF - color.r;
+    let g = 0xFF - color.g;
+    let b = 0xFF - color.b;
+    HexColor::new(r, g, b)
+}
+
 const WEEKS_IN_A_YEAR: u32 = 52;
 #[must_use]
 pub fn render_svg(
@@ -75,10 +82,17 @@ pub fn render_svg(
     drawing_ratios: &DrawingRatios,
     border_unit: &BorderUnit,
     shape_type: &SvgShape,
-    scale_factor: &u32,
+    scale_factor: u32,
+    color_primary_hexcolor: HexColor,
+    color_secondary_hexcolor: Option<HexColor>,
 ) -> Document {
-    let color_primary = "black";
-    let color_secondary = "white";
+    let color_secondary = match color_secondary_hexcolor {
+        Some(color) => color,
+        None => invert_color(color_primary_hexcolor),
+    }
+    .to_string();
+
+    let color_primary = color_primary_hexcolor.to_string();
 
     let today = Date::today_utc();
     let end = death_day(bday, years);
@@ -112,7 +126,7 @@ pub fn render_svg(
         .set("y", 0)
         .set("width", viewbox_width)
         .set("height", viewbox_height)
-        .set("fill", color_secondary);
+        .set("fill", color_secondary.as_str());
 
     document.append(background);
 
@@ -122,9 +136,9 @@ pub fn render_svg(
         // There's an off-by-one error if we do not add 7 days here. It will show that one week has
         // passed since the person's birthday on their birthday, which is not correct.
         let fill = if curr_date.add_days(7) <= today {
-            color_primary
+            color_primary.as_str()
         } else {
-            color_secondary
+            color_secondary.as_str()
         };
 
         let x_offset = ((viewbox_width - grid_width) / 2) + padding + (stroke_width / 2);
@@ -144,7 +158,7 @@ pub fn render_svg(
                 .set("width", inner_shape_size)
                 .set("height", inner_shape_size)
                 .set("fill", fill)
-                .set("stroke", color_primary)
+                .set("stroke", color_primary.as_str())
                 .set("stroke-width", stroke_width)
                 .into(),
             SvgShape::Circle => Circle::new()
@@ -152,7 +166,7 @@ pub fn render_svg(
                 .set("cy", cy)
                 .set("r", inner_shape_size / 2)
                 .set("fill", fill)
-                .set("stroke", color_primary)
+                .set("stroke", color_primary.as_str())
                 .set("stroke-width", stroke_width)
                 .into(),
         };
