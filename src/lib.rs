@@ -88,6 +88,9 @@ mod tests {
     fn given_birthday_and_lifespan_return_lifespan_in_days() {
         assert_eq!(lifespan_days(Date::new(2000, 1, 1).unwrap(), 80), 29220);
         assert_eq!(lifespan_days(Date::new(1996, 2, 29).unwrap(), 99), 36159);
-        assert_eq!(lifespan_days(Date::new(1998, 8, 15).unwrap(), 1000), 365243);
+        assert_eq!(
+            lifespan_days(Date::new(1998, 8, 15).unwrap(), 1000),
+            365_243
+        );
     }
 }
