@@ -1,6 +1,9 @@
 pub mod svg_generator;
 use svg_generator::{render_svg, BorderUnit, DrawingRatios, SvgShape};
 
+pub mod parse_color;
+use parse_color::parse_svg_color;
+
 use death_calendar::{
     days_left, days_lived, death_day, lifespan_days, lifespan_weeks, weeks_left, weeks_lived,
     years_left, years_lived,
@@ -8,7 +11,7 @@ use death_calendar::{
 
 use clap::{value_parser, Parser};
 use gregorian::Date;
-use hex_color::{HexColor, ParseHexColorError};
+use hex_color::HexColor;
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
@@ -28,7 +31,6 @@ struct CommonArgs {
     lifespan_years: i16,
 }
 
-// This won't work until https://github.com/clap-rs/clap/issues/1546 is fixed.
 #[derive(Parser, Debug)]
 enum Commands {
     /// Print info about your ultimate demise
@@ -66,12 +68,13 @@ enum Commands {
         #[clap(long, value_parser(value_parser!(u32).range(1..)), default_value_t = 1)]
         scale_factor: u32,
         /// Add a primary color.
-        /// You can use any string that matches the <paint> type in the SVG standard.
-        /// https://www.w3.org/Graphics/SVG/1.1/painting.html#SpecifyingPaint
-        #[clap(long, value_parser = clap::builder::ValueParser::new(parse_css2_color), default_value = "black")]
+        /// You can use a string containing any valid <color> type from the SVG 1.1 specification.
+        /// https://www.w3.org/Graphics/SVG/1.1/types.html#DataTypeColor
+        // FIXME: This isn't true yet.
+        #[clap(long, value_parser = clap::builder::ValueParser::new(parse_svg_color), default_value = "black")]
         color_primary: HexColor,
         /// Add a secondary color.
-        #[clap(long, value_parser = clap::builder::ValueParser::new(parse_css2_color))]
+        #[clap(long, value_parser = clap::builder::ValueParser::new(parse_svg_color))]
         color_secondary: Option<HexColor>,
     },
 }
@@ -92,30 +95,6 @@ fn death_info(bday: Date, years: i16) {
     println!("- {} days", days_left(today, bday, years).abs());
     println!("- {} weeks", weeks_left(today, bday, years).abs());
     println!("- {} years", years_left(today, bday, years).abs());
-}
-
-fn parse_css2_color(color: &str) -> Result<HexColor, ParseHexColorError> {
-    let hex_str = match color {
-        "maroon" => "800000",
-        "red" => "ff0000",
-        "orange" => "ffA500",
-        "yellow" => "ffff00",
-        "olive" => "808000",
-        "purple" => "800080",
-        "fuchsia" => "ff00ff",
-        "white" => "ffffff",
-        "lime" => "00ff00",
-        "green" => "008000",
-        "navy" => "000080",
-        "blue" => "0000ff",
-        "aqua" => "00ffff",
-        "teal" => "008080",
-        "black" => "000000",
-        "silver" => "c0c0c0",
-        "gray" => "808080",
-        s => s,
-    };
-    <HexColor as std::str::FromStr>::from_str(hex_str)
 }
 
 fn main() {

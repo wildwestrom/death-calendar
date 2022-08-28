@@ -67,11 +67,8 @@ pub struct DrawingRatios {
     border: u32,
 }
 
-const fn invert_color(color: HexColor) -> HexColor {
-    let r = 0xFF - color.r;
-    let g = 0xFF - color.g;
-    let b = 0xFF - color.b;
-    HexColor::new(r, g, b)
+fn invert_color(color: HexColor) -> HexColor {
+    HexColor::new(255, 255, 255) - color
 }
 
 const WEEKS_IN_A_YEAR: u32 = 52;
