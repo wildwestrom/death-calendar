@@ -98,20 +98,6 @@ fn death_info(bday: Date, years: i16) {
 }
 
 fn main() {
-    // Use these blocks of code for testing purposes.
-    // let args = Args::parse_from(["death-calendar", "--help"]);
-    // let args = Args::parse_from(["death-calendar", "info", "--help"]);
-    // let args = Args::parse_from(["death-calendar", "info", "1998-07-26", "-l", "100"]);
-    // let args = Args::parse_from([
-    //     "death-calendar",
-    //     "svg",
-    //     "2000-01-01",
-    //     "-l",
-    //     "100",
-    //     "-o",
-    //     "test.svg",
-    // ]);
-
     let args = Args::parse();
 
     match args.command {
