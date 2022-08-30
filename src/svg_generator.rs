@@ -173,8 +173,9 @@ pub fn render_svg(
     let mut count = 0;
     let mut curr_date = bday;
     while curr_date < end {
-        // There's an off-by-one error if we do not add 7 days here. It will show that one week has
-        // passed since the person's birthday on their birthday, which is not correct.
+        // There's an off-by-one error if we do not add 7 days to the current date. It will show
+        // that one week has passed since the person's birthday on their birthday, which is not
+        // correct.
         let fill = if curr_date.add_days(7) <= today {
             color_primary.as_str()
         } else {
