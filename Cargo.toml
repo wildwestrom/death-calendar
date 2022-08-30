@@ -12,9 +12,9 @@ categories = ["command-line-utilities"]
 # See more keys and their definitions at https: //doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-chrono = "0.4.22"
-clap = { version = "3.2.17" , features = ["derive"] }
-date_time_parser = "0.1.1"
-gregorian = "0.2.3"
+chrono = "0.4"
+clap = { version = "3.2" , features = ["derive"] }
+date_time_parser = "0.1"
+gregorian = "0.2"
 svg = "0.10"
-hex_color = "1.0.0"
+hex_color = "1"
