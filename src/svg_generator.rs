@@ -1,3 +1,5 @@
+use std::{error::Error, num::ParseIntError, str::FromStr};
+
 use death_calendar::death_day;
 
 use gregorian::Date;
@@ -13,46 +15,36 @@ pub enum BorderUnit {
     Shape,
 }
 
+#[derive(Debug)]
+pub struct ParseBorderUnitError;
+
+impl std::fmt::Display for ParseBorderUnitError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Could not parse string as a border unit variant\nDid you misspell it?"
+        )
+    }
+}
+
+impl Error for ParseBorderUnitError {}
+
+impl FromStr for BorderUnit {
+    type Err = ParseBorderUnitError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "pixel" => Ok(Self::Pixel),
+            "shape" => Ok(Self::Shape),
+            _ => Err(ParseBorderUnitError),
+        }
+    }
+}
+
 #[derive(Debug, Clone, clap::ValueEnum)]
 pub enum SvgShape {
     Square,
     Circle,
-}
-
-#[derive(Debug)]
-pub struct ParseDrawingRatiosError;
-
-impl std::fmt::Display for ParseDrawingRatiosError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Could not parse the ratio string")
-    }
-}
-
-impl std::error::Error for ParseDrawingRatiosError {}
-
-impl std::str::FromStr for DrawingRatios {
-    type Err = ParseDrawingRatiosError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let split_str: Vec<&str> = s.split(',').collect();
-        let ratio_vals: Vec<u32> = split_str
-            .iter()
-            .filter_map(|n| u32::from_str(n).ok())
-            .collect();
-        if ratio_vals.len() > 4 {
-            return Err(ParseDrawingRatiosError);
-        }
-        let stroke = ratio_vals[0];
-        let padding = ratio_vals[1];
-        let length = ratio_vals[2];
-        let border = ratio_vals[3];
-        Ok(Self {
-            stroke,
-            padding,
-            length,
-            border,
-        })
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -65,6 +57,57 @@ pub struct DrawingRatios {
     length: u32,
     // How much space should be around the grid?
     border: u32,
+    // Should the border be measured in pixels or the shape?
+    border_unit: BorderUnit,
+}
+
+#[derive(Debug)]
+pub struct ParseDrawingRatiosError {
+    message: String,
+}
+
+impl std::fmt::Display for ParseDrawingRatiosError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Could not parse the ratio string: {}", self.message)
+    }
+}
+
+impl Error for ParseDrawingRatiosError {}
+
+impl From<ParseIntError> for ParseDrawingRatiosError {
+    fn from(_: ParseIntError) -> Self {
+        Self {
+            message: "Could not parse integer from string".into(),
+        }
+    }
+}
+
+impl From<ParseBorderUnitError> for ParseDrawingRatiosError {
+    fn from(_: ParseBorderUnitError) -> Self {
+        Self {
+            message: "Could not parse border unit from string".into(),
+        }
+    }
+}
+
+impl FromStr for DrawingRatios {
+    type Err = ParseDrawingRatiosError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let split_str: Vec<&str> = s.split(',').collect();
+        if split_str.len() != 5 {
+            return Err(ParseDrawingRatiosError {
+                message: "You do not have the correct number of values".into(),
+            });
+        }
+        Ok(Self {
+            stroke: split_str[0].parse()?,
+            padding: split_str[1].parse()?,
+            length: split_str[2].parse()?,
+            border: split_str[3].parse()?,
+            border_unit: split_str[4].parse()?,
+        })
+    }
 }
 
 fn invert_color(color: HexColor) -> HexColor {
@@ -73,13 +116,11 @@ fn invert_color(color: HexColor) -> HexColor {
 
 const WEEKS_IN_A_YEAR: u32 = 52;
 
-#[allow(clippy::too_many_arguments)]
 #[must_use]
 pub fn render_svg(
     bday: Date,
     years: i16,
     drawing_ratios: &DrawingRatios,
-    border_unit: &BorderUnit,
     shape_type: &SvgShape,
     scale_factor: u32,
     color_primary_hexcolor: HexColor,
@@ -102,7 +143,7 @@ pub fn render_svg(
     let inner_shape_size = (drawing_ratios.length * 2) * scale_factor + stroke_width;
     let outer_shape_size = inner_shape_size + (padding * 2) + stroke_width;
 
-    let border = match border_unit {
+    let border = match drawing_ratios.border_unit {
         BorderUnit::Pixel => drawing_ratios.border * scale_factor,
         BorderUnit::Shape => drawing_ratios.border * scale_factor * outer_shape_size,
     };

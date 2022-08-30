@@ -1,5 +1,5 @@
 pub mod svg_generator;
-use svg_generator::{render_svg, BorderUnit, DrawingRatios, SvgShape};
+use svg_generator::{render_svg, DrawingRatios, SvgShape};
 
 pub mod parse_color;
 use parse_color::parse_svg_color;
@@ -38,24 +38,21 @@ enum Commands {
         #[clap(flatten)]
         common_args: CommonArgs,
     },
-    /// Generate an SVG Image of the calendar
+    /// Generate an SVG image of the calendar
     Svg {
         #[clap(flatten)]
         common_args: CommonArgs,
         /// Save SVG to a file instead of printing to stdout
         #[clap(short, long)]
         output: Option<PathBuf>,
-        /// How to measure space around calendar
-        #[clap(short, long, value_enum, default_value_t = BorderUnit::Pixel)]
-        border_unit: BorderUnit,
-        /// Ratios used to create the image.
-        /// Comma separated list of integers in order:
-        /// [stroke_width,padding,shape_length,border_size]
+        /// Ratios used to create the image. Comma separated list of values in order. The first four
+        /// values are integers. The last value represents the units used to measure the border
+        /// size, which is either in 'pixels' or the size of the 'shape' itself.
         #[clap(
             short = 'r',
             long = "ratios",
             value_parser,
-            default_value = "1,1,15,3",
+            default_value = "1,1,15,3,pixels",
             name = "RATIO_STRING"
         )]
         drawing_ratios: DrawingRatios,
@@ -109,7 +106,6 @@ fn main() {
     match args.command {
         Commands::Svg {
             output,
-            border_unit,
             drawing_ratios,
             shape,
             scale_factor,
@@ -123,7 +119,6 @@ fn main() {
                 common_args.birthday,
                 common_args.lifespan_years,
                 &drawing_ratios,
-                &border_unit,
                 &shape,
                 scale_factor,
                 color_primary,
