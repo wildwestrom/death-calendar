@@ -12,10 +12,14 @@ This was 100% inspired by the [waitbutwhy.com](https://waitbutwhy.com/2014/05/li
 Make sure you have a working rust toolchain.
 
 ```shell
-git clone https://github.com/wildwestrom/death-calendar
+# Shallow clone the repository
+git clone --depth 1 https://github.com/wildwestrom/death-calendar
+# Move into it
 cd death-calendar
+# Compile it
 cargo build --release
-./target/release/death-calendar
+# Now copy the newly compiled file to a location on your $PATH
+cp target/release/death-calendar [DESTINATION]
 ```
 
 ## Ideas
