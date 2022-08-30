@@ -68,7 +68,7 @@ pub struct ParseDrawingRatiosError {
 
 impl std::fmt::Display for ParseDrawingRatiosError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Could not parse the ratio string: {}", self.message)
+        write!(f, "\nCould not parse the ratio string: {}.", self.message)
     }
 }
 
@@ -77,7 +77,7 @@ impl Error for ParseDrawingRatiosError {}
 impl From<ParseIntError> for ParseDrawingRatiosError {
     fn from(_: ParseIntError) -> Self {
         Self {
-            message: "Could not parse integer from string".into(),
+            message: "Value must be a number".into(),
         }
     }
 }
@@ -85,7 +85,7 @@ impl From<ParseIntError> for ParseDrawingRatiosError {
 impl From<ParseBorderUnitError> for ParseDrawingRatiosError {
     fn from(_: ParseBorderUnitError) -> Self {
         Self {
-            message: "Could not parse border unit from string".into(),
+            message: "Border unit can only be 'pixel' or 'shape'".into(),
         }
     }
 }
