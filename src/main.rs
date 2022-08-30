@@ -115,7 +115,8 @@ fn main() {
             scale_factor,
             color_primary,
             color_secondary,
-            // This should work for now until https://github.com/clap-rs/clap/issues/1546 is resolved.
+            // This should work for now until https://github.com/clap-rs/clap/issues/1546 is
+            // resolved.
             common_args,
         } => {
             let document = render_svg(

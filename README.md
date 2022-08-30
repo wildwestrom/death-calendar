@@ -14,8 +14,13 @@ Make sure you have a working rust toolchain.
 ```shell
 git clone https://github.com/wildwestrom/death-calendar
 cd death-calendar
-cargo install
+cargo build --release
+./target/release/death-calendar
 ```
+
+## Ideas
+- Make a spiral calendar
+- Make a logarithmic calendar
 
 ## License
 
