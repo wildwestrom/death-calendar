@@ -34,8 +34,8 @@ impl FromStr for BorderUnit {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "pixel" => Ok(Self::Pixel),
-            "shape" => Ok(Self::Shape),
+            "0" | "pixel" | "pixels" => Ok(Self::Pixel),
+            "1" | "shape" | "shapes" => Ok(Self::Shape),
             _ => Err(ParseBorderUnitError),
         }
     }

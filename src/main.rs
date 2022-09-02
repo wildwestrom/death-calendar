@@ -47,12 +47,12 @@ enum Commands {
         output: Option<PathBuf>,
         /// Ratios used to create the image. Comma separated list of values in order. The first four
         /// values are integers. The last value represents the units used to measure the border
-        /// size, which is either in 'pixels' or the size of the 'shape' itself.
+        /// size, which is either in 'pixel's or the size of the 'shape' itself.
         #[clap(
             short = 'r',
             long = "ratios",
             value_parser,
-            default_value = "1,1,15,3,pixels",
+            default_value = "1,1,15,3,pixel",
             name = "RATIO_STRING"
         )]
         drawing_ratios: DrawingRatios,
