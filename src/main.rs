@@ -82,8 +82,8 @@ fn death_info(bday: Date, years: i16) {
     println!();
     println!("You will live for approximately:");
     println!("- {} days", lifespan_days(bday, years));
-    println!("- {} weeks", lifespan_weeks(bday, years));
-    println!("- {} months", lifespan_months(bday, years));
+    println!("- {} weeks", lifespan_weeks(years));
+    println!("- {} months", lifespan_months(years));
     println!("- {} years", years);
     println!();
     println!("You will probably die around {}.", death_day(bday, years));
