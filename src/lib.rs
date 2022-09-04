@@ -43,11 +43,7 @@ pub const fn days_lived(today: Date, birthday: Date) -> i32 {
 /// Compute the number of weeks lived since birth.
 #[must_use]
 pub fn weeks_lived(today: Date, birthday: Date) -> i32 {
-    let mut inc = 0;
-    while birthday.add_days(inc * 7) < today {
-        inc += 1;
-    }
-    inc
+    days_lived(today, birthday) / 7
 }
 
 /// Compute the number of months lived since birth.
@@ -63,11 +59,19 @@ pub fn months_lived(today: Date, birthday: Date) -> i32 {
 /// Compute the number of years lived since birth.
 #[must_use]
 pub fn years_lived(today: Date, birthday: Date) -> i32 {
-    let mut inc = 0;
-    while birthday.add_years(inc).or_prev_valid() < today {
-        inc += 1;
+    let mut year_inc = 0;
+    let mut new_date;
+    while birthday.add_years(year_inc).or_prev_valid() < today {
+        year_inc += 1;
     }
-    inc.into()
+    new_date = birthday.add_years(year_inc).or_prev_valid();
+    let mut day_inc = 0;
+    while today < new_date {
+        new_date = new_date.sub_days(day_inc);
+        day_inc += 1;
+    }
+    if day_inc > 0 { year_inc -= 1 };
+    year_inc.into()
 }
 
 /// Compute the estimated number of days of life remaining, given a lifespan in years.
@@ -158,6 +162,11 @@ mod tests {
             2000
         );
         assert_eq!(
+            years_lived(Date::new(1999, 12, 31).unwrap(),
+                        Date::new(0, 1, 1).unwrap()),
+            1999
+        );
+        assert_eq!(
             years_lived(
                 Date::new(2100, 1, 1).unwrap(),
                 Date::new(2000, 1, 1).unwrap()
@@ -166,26 +175,61 @@ mod tests {
         );
         assert_eq!(
             years_lived(
+                Date::new(2099, 12, 31).unwrap(),
+                Date::new(2000, 1, 1).unwrap()
+            ),
+            99
+        );
+        assert_eq!(
+            years_lived(
                 Date::new(2100, 3, 3).unwrap(),
                 Date::new(2000, 3, 3).unwrap()
             ),
             100
         );
+        assert_eq!(
+            years_lived(
+                Date::new(2100, 3, 2).unwrap(),
+                Date::new(2000, 3, 3).unwrap()
+            ),
+            99
+        );
         // Months
         assert_eq!(
             months_lived(
-                Date::new(2100, 1, 2).unwrap(),
+                Date::new(2100, 1, 1).unwrap(),
                 Date::new(2000, 1, 1).unwrap()
             ),
-            100 * 12
+            (100 * 12)
         );
         // Weeks
         assert_eq!(
             weeks_lived(
-                Date::new(2100, 1, 2).unwrap(),
+                Date::new(2000, 1, 7).unwrap(),
                 Date::new(2000, 1, 1).unwrap()
             ),
-            (100 * 52) + 18
+            0
+        );
+        assert_eq!(
+            weeks_lived(
+                Date::new(2000, 1, 8).unwrap(),
+                Date::new(2000, 1, 1).unwrap()
+            ),
+            1
+        );
+        assert_eq!(
+            weeks_lived(
+                Date::new(2000, 12, 31).unwrap(),
+                Date::new(2000, 1, 1).unwrap()
+            ),
+            52
+        );
+        assert_eq!(
+            weeks_lived(
+                Date::new(2001, 1, 1).unwrap(),
+                Date::new(2000, 1, 1).unwrap()
+            ),
+            52
         );
         // Days
         assert_eq!(
