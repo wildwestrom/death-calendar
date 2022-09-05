@@ -30,7 +30,7 @@ args = ["fmt", "--check"]
 
 [tasks.toml-fmt-check]
 command = "taplo"
-args = ["fmt", "--check", "Cargo.toml", "make.toml"]
+args = ["fmt", "--check", "Cargo.toml", "Makefile.toml"]
 
 [tasks.fmt]
 dependencies = ["cargo-fmt-check", "toml-fmt-check"]
