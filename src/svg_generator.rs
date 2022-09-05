@@ -135,8 +135,6 @@ fn invert_color(color: HexColor) -> HexColor {
 
 const WEEKS_IN_A_YEAR: u32 = 52;
 
-#[allow(clippy::integer_division)]
-#[allow(clippy::integer_arithmetic)]
 #[must_use]
 pub fn render_svg(
     bday: Date,
@@ -147,11 +145,9 @@ pub fn render_svg(
     color_primary_hexcolor: HexColor,
     color_secondary_hexcolor: Option<HexColor>,
 ) -> Document {
-    let color_secondary = match color_secondary_hexcolor {
-        Some(color) => color,
-        None => invert_color(color_primary_hexcolor),
-    }
-    .to_string();
+    let color_secondary = color_secondary_hexcolor
+        .map_or_else(|| invert_color(color_primary_hexcolor), |color| color)
+        .to_string();
 
     let color_primary = color_primary_hexcolor.to_string();
 

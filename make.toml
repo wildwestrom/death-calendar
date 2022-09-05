@@ -1,8 +1,3 @@
-[tasks.format]
-install_crate = "rustfmt"
-command = "cargo"
-args = ["fmt", "--", "--emit=files"]
-
 [tasks.clean]
 command = "cargo"
 args = ["clean"]
@@ -12,8 +7,33 @@ command = "cargo"
 args = ["test"]
 
 [tasks.lint]
-script = { file = "bin/clippy.sh" }
-dependencies = ["format"]
+script = '''
+cargo clippy -- \
+  -D clippy::all \
+  -D clippy::pedantic \
+  -D clippy::nursery \
+  -D clippy::restriction \
+  -D clippy::cargo \
+  -A clippy::integer_arithmetic \
+  -A clippy::arithmetic \
+  -A clippy::integer_division \
+  -A clippy::missing-docs-in-private-items \
+  -A clippy::implicit_return \
+  -A clippy::separated_literal_suffix \
+  -A clippy::std_instead_of_core
+'''
+
+[tasks.cargo-fmt-check]
+install_crate = "rustfmt"
+command = "cargo"
+args = ["fmt", "--check"]
+
+[tasks.toml-fmt-check]
+command = "taplo"
+args = ["fmt", "--check", "Cargo.toml", "make.toml"]
+
+[tasks.fmt]
+dependencies = ["cargo-fmt-check", "toml-fmt-check"]
 
 [tasks.release]
 dependencies = ["clean"]
@@ -21,8 +41,4 @@ command = "cargo"
 args = ["build", "--release"]
 
 [tasks.ci]
-dependencies = [
-    "lint",
-    "test",
-    "release",
-]
+dependencies = ["fmt", "lint", "test", "release"]

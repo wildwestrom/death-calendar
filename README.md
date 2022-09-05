@@ -22,9 +22,21 @@ cargo build --release
 cp target/release/death-calendar [DESTINATION]
 ```
 
-## Ideas
+## Goals
+- Make an easy installer
+- Make it so the calendar updates every day automatically
+- Make a graphical interface for customizing the look of the calendar
+- Should work on multiple platforms
+  - Linux
+  - MacOS
+  - Windows
+  - Android
+  - iOS
+
+### New Calendar Render Ideas
 - Make a spiral calendar
 - Make a logarithmic calendar
+- Represent your time as an hourglass
 
 ## License
 

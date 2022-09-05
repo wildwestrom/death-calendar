@@ -1,4 +1,3 @@
-#![allow(clippy::integer_arithmetic)]
 use gregorian::Date;
 use gregorian::DateResultExt;
 
