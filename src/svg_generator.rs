@@ -135,6 +135,8 @@ fn invert_color(color: HexColor) -> HexColor {
 
 const WEEKS_IN_A_YEAR: u32 = 52;
 
+#[allow(clippy::integer_division)]
+#[allow(clippy::integer_arithmetic)]
 #[must_use]
 pub fn render_svg(
     bday: Date,

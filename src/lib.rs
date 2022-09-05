@@ -1,3 +1,4 @@
+#![allow(clippy::integer_arithmetic)]
 use gregorian::Date;
 use gregorian::DateResultExt;
 
@@ -47,8 +48,10 @@ pub const fn days_lived(today: Date, birthday: Date) -> i32 {
 /// Compute the number of weeks lived since birth.
 #[must_use]
 #[inline]
+#[allow(clippy::integer_division)] // Delete this when int_roundings is ready
 pub const fn weeks_lived(today: Date, birthday: Date) -> i32 {
     days_lived(today, birthday) / 7_i32
+    // days_lived(today, birthday).div_floor(7_i32) // Uncomment when int_roundings is stable
 }
 
 /// Compute the number of months lived since birth.
