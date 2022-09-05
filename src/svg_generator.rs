@@ -90,10 +90,29 @@ impl From<ParseBorderUnitError> for ParseDrawingRatiosError {
     }
 }
 
+impl<T> From<Result<T, Self>> for ParseDrawingRatiosError {
+    fn from(_: Result<T, Self>) -> Self {
+        Self {
+            message: "An error occurred".into(),
+        }
+    }
+}
+
 impl FromStr for DrawingRatios {
     type Err = ParseDrawingRatiosError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        fn get_val_from_substr(
+            string_vec: &[&str],
+            i: usize,
+        ) -> Result<String, ParseDrawingRatiosError> {
+            string_vec
+                .get(i)
+                .ok_or(ParseDrawingRatiosError {
+                    message: format!("No value found at index {i}."),
+                })
+                .map(|s| s.to_owned().to_owned())
+        }
         let split_str: Vec<&str> = s.split(',').collect();
         if split_str.len() != 5 {
             return Err(ParseDrawingRatiosError {
@@ -101,11 +120,11 @@ impl FromStr for DrawingRatios {
             });
         }
         Ok(Self {
-            stroke: split_str[0].parse()?,
-            padding: split_str[1].parse()?,
-            length: split_str[2].parse()?,
-            border: split_str[3].parse()?,
-            border_unit: split_str[4].parse()?,
+            stroke: get_val_from_substr(&split_str, 0)?.parse()?,
+            padding: get_val_from_substr(&split_str, 1)?.parse()?,
+            length: get_val_from_substr(&split_str, 2)?.parse()?,
+            border: get_val_from_substr(&split_str, 3)?.parse()?,
+            border_unit: get_val_from_substr(&split_str, 4)?.parse()?,
         })
     }
 }
@@ -119,7 +138,7 @@ const WEEKS_IN_A_YEAR: u32 = 52;
 #[must_use]
 pub fn render_svg(
     bday: Date,
-    years: i16,
+    lifespan_years: i16,
     drawing_ratios: &DrawingRatios,
     shape_type: &SvgShape,
     scale_factor: u32,
@@ -135,7 +154,7 @@ pub fn render_svg(
     let color_primary = color_primary_hexcolor.to_string();
 
     let today = Date::today_utc();
-    let end = death_day(bday, years);
+    let end = death_day(bday, lifespan_years);
 
     let stroke_width = drawing_ratios.stroke * scale_factor * 2;
 
@@ -151,19 +170,22 @@ pub fn render_svg(
     // In total, the outer dimensions of a shape is a function of its stroke-width x 2,
     // hence the variable `space_around_shape`.
     let grid_width = outer_shape_size
-        * u32::try_from(years).expect("Couldn't convert number of years to a u32.");
+        // Here I convert an i16 to a u32.
+        // I'm not sure what behavior I'll get if there's a negative value going in,
+        // so for now I'll just set it to zero just in case.
+        * u32::try_from(lifespan_years).unwrap_or(0);
     let grid_height = outer_shape_size * WEEKS_IN_A_YEAR;
 
     let viewbox_width = grid_width + (border * 2) + (padding * 2);
     let viewbox_height = grid_height + (border * 2) + (padding * 2);
 
     let mut document = Document::new()
-        .set("viewBox", (0, 0, viewbox_width, viewbox_height))
+        .set("viewBox", (0_u8, 0_u8, viewbox_width, viewbox_height))
         .set("style", format!("background-color:{}", color_primary));
 
     let background = Rectangle::new()
-        .set("x", 0)
-        .set("y", 0)
+        .set("x", 0_u8)
+        .set("y", 0_u8)
         .set("width", viewbox_width)
         .set("height", viewbox_height)
         .set("fill", color_secondary.as_str());
@@ -192,7 +214,7 @@ pub fn render_svg(
         let cy_offset =
             ((viewbox_height - grid_height) / 2) + (padding / 2) + (outer_shape_size / 2);
         let cy = ((count % WEEKS_IN_A_YEAR) * outer_shape_size) + cy_offset;
-        let shape: Element = match shape_type {
+        let shape: Element = match *shape_type {
             SvgShape::Square => Rectangle::new()
                 .set("x", x)
                 .set("y", y)
@@ -216,7 +238,7 @@ pub fn render_svg(
         /* All this below is just to make sure there are always 52 weeks. To do this, we change the
         number of days in a week and skip the 29th of February whenever it comes. */
         let week_length = if count % 52 == 0 { 8 } else { 7 };
-        for _ in 0..week_length {
+        for _ in 0_u8..week_length {
             curr_date = curr_date.next();
             if curr_date.month() == 2 && curr_date.day() == 29 {
                 curr_date = curr_date.next();
@@ -225,5 +247,5 @@ pub fn render_svg(
         count += 1;
     }
 
-    document
+    return document;
 }

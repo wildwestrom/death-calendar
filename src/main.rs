@@ -1,7 +1,7 @@
-pub mod svg_generator;
+mod svg_generator;
 use svg_generator::{render_svg, DrawingRatios, SvgShape};
 
-pub mod parse_color;
+mod parse_color;
 use parse_color::parse_svg_color;
 
 use death_calendar::{
@@ -65,9 +65,8 @@ enum Commands {
         #[clap(long, value_parser(value_parser!(u32).range(1..)), default_value_t = 1)]
         scale_factor: u32,
         /// Add a primary color.
-        /// You can use a string containing any valid <color> type from the SVG 1.1 specification.
+        /// You can use a string containing (almost) any valid <color> type from the SVG 1.1 specification.
         /// https://www.w3.org/Graphics/SVG/1.1/types.html#DataTypeColor
-        // FIXME: This isn't true yet.
         #[clap(long, value_parser = clap::builder::ValueParser::new(parse_svg_color), default_value = "black")]
         color_primary: HexColor,
         /// Add a secondary color.
@@ -76,6 +75,7 @@ enum Commands {
     },
 }
 
+#[allow(clippy::print_stdout)]
 fn death_info(bday: Date, years: i16) {
     let today: Date = Date::today_utc();
     println!("Your birthday is {}.", bday);
@@ -100,7 +100,7 @@ fn death_info(bday: Date, years: i16) {
     println!("- {} years", years_left(today, bday, years).abs());
 }
 
-fn main() {
+fn main() -> Result<(), std::io::Error> {
     let args = Args::parse();
 
     match args.command {
@@ -125,12 +125,20 @@ fn main() {
                 color_secondary,
             );
             output.map_or_else(
-                || println!("{}", document),
-                |file| svg::save(file, &document).expect("Couldn't save SVG to file."),
-            );
+                #[allow(clippy::print_stdout)]
+                || {
+                    println!("{document}");
+                    Ok(())
+                },
+                |file| {
+                    svg::save(file, &document)?;
+                    Ok(())
+                },
+            )
         }
         Commands::Info { common_args } => {
             death_info(common_args.birthday, common_args.lifespan_years);
+            Ok(())
         }
     }
 }

@@ -1,8 +1,9 @@
-pub use gregorian::Date;
+use gregorian::Date;
 use gregorian::DateResultExt;
 
 /// Compute the estimated day you will die.
 #[must_use]
+#[inline]
 pub const fn death_day(birthday: Date, lifespan_years: i16) -> Date {
     match birthday
         .year_month()
@@ -16,6 +17,7 @@ pub const fn death_day(birthday: Date, lifespan_years: i16) -> Date {
 
 /// Compute the estimated lifespan in days, given a lifespan in years.
 #[must_use]
+#[inline]
 pub const fn lifespan_days(birthday: Date, lifespan_years: i16) -> i32 {
     let deathday = death_day(birthday, lifespan_years);
     Date::days_since(birthday, deathday)
@@ -23,85 +25,96 @@ pub const fn lifespan_days(birthday: Date, lifespan_years: i16) -> i32 {
 
 /// Compute the estimated lifespan in weeks, given a lifespan in years.
 #[must_use]
+#[inline]
 pub fn lifespan_weeks(lifespan_years: i16) -> i32 {
     (lifespan_years * 52).into()
 }
 
 /// Compute the estimated lifespan in months, given a lifespan in years.
-#[allow(clippy::cast_possible_truncation)]
 #[must_use]
+#[inline]
 pub fn lifespan_months(lifespan_years: i16) -> i32 {
     (lifespan_years * 12).into()
 }
 
 /// Compute the number of days lived since birth.
 #[must_use]
+#[inline]
 pub const fn days_lived(today: Date, birthday: Date) -> i32 {
     Date::days_since(birthday, today)
 }
 
 /// Compute the number of weeks lived since birth.
 #[must_use]
-pub fn weeks_lived(today: Date, birthday: Date) -> i32 {
-    days_lived(today, birthday) / 7
+#[inline]
+pub const fn weeks_lived(today: Date, birthday: Date) -> i32 {
+    days_lived(today, birthday) / 7_i32
 }
 
 /// Compute the number of months lived since birth.
 #[must_use]
+#[inline]
 pub fn months_lived(today: Date, birthday: Date) -> i32 {
-    let mut inc = 0;
+    let mut inc = 0_i32;
     while birthday.add_months(inc).or_prev_valid() < today {
-        inc += 1;
+        inc += 1_i32;
     }
     inc
 }
 
 /// Compute the number of years lived since birth.
 #[must_use]
+#[inline]
 pub fn years_lived(today: Date, birthday: Date) -> i32 {
-    let mut year_inc = 0;
+    let mut year_inc = 0_i16;
     let mut new_date;
     while birthday.add_years(year_inc).or_prev_valid() < today {
-        year_inc += 1;
+        year_inc += 1_i16;
     }
     new_date = birthday.add_years(year_inc).or_prev_valid();
-    let mut day_inc = 0;
+    let mut day_inc = 0_i32;
     while today < new_date {
         new_date = new_date.sub_days(day_inc);
-        day_inc += 1;
+        day_inc += 1_i32;
     }
-    if day_inc > 0 { year_inc -= 1 };
+    if day_inc > 0_i32 {
+        year_inc -= 1_i16;
+    };
     year_inc.into()
 }
 
 /// Compute the estimated number of days of life remaining, given a lifespan in years.
 #[must_use]
+#[inline]
 pub const fn days_left(today: Date, birthday: Date, lifespan_years: i16) -> i32 {
     Date::days_since(today, death_day(birthday, lifespan_years))
 }
 
 /// Compute the estimated number of weeks of life remaining, given a lifespan in years.
 #[must_use]
+#[inline]
 pub fn weeks_left(today: Date, birthday: Date, lifespan_years: i16) -> i32 {
-    let mut inc = 0;
+    let mut inc = 0_i16;
     while birthday.add_years(inc).or_next_valid() < today {
-        inc += 1;
+        inc += 1_i16;
     }
-    ((lifespan_years - inc) as i32 * 52).into()
+    i32::from(lifespan_years - inc) * 52_i32
 }
 
 /// Compute the estimated number of months of life remaining, given a lifespan in years.
 #[must_use]
+#[inline]
 pub fn months_left(today: Date, birthday: Date, lifespan_years: i16) -> i32 {
-    let mut inc = 0;
+    let mut inc = 0_i32;
     while birthday.add_months(inc).or_next_valid() < today {
-        inc += 1;
+        inc += 1_i32;
     }
-    ((lifespan_years * 12) as i32 - inc).into()
+    i32::from(lifespan_years * 12_i16) - inc
 }
 
 /// Compute the estimated number of weeks of life remaining, given a lifespan in years.
 #[must_use]
+#[inline]
 pub fn years_left(today: Date, birthday: Date, lifespan_years: i16) -> i32 {
     let mut inc = 0;
     while birthday.add_years(inc).or_next_valid() < today {
@@ -157,13 +170,14 @@ mod tests {
     fn given_birthday_lifespan_and_date_after_birth_return_life_lived() {
         // Years
         assert_eq!(
-            years_lived(Date::new(2000, 1, 1).unwrap(),
-                        Date::new(0, 1, 1).unwrap()),
+            years_lived(Date::new(2000, 1, 1).unwrap(), Date::new(0, 1, 1).unwrap()),
             2000
         );
         assert_eq!(
-            years_lived(Date::new(1999, 12, 31).unwrap(),
-                        Date::new(0, 1, 1).unwrap()),
+            years_lived(
+                Date::new(1999, 12, 31).unwrap(),
+                Date::new(0, 1, 1).unwrap()
+            ),
             1999
         );
         assert_eq!(
