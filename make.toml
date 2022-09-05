@@ -7,10 +7,6 @@ args = ["fmt", "--", "--emit=files"]
 command = "cargo"
 args = ["clean"]
 
-[tasks.build]
-command = "cargo"
-args = ["build"]
-
 [tasks.test]
 command = "cargo"
 args = ["test"]
@@ -18,10 +14,15 @@ args = ["test"]
 [tasks.lint]
 script = { file = "bin/clippy.sh" }
 
+[tasks.release]
+dependencies = ["clean"]
+command = "cargo"
+args = ["build", "--release"]
+
 [tasks.ci]
 dependencies = [
     "format",
-    "build",
     "lint",
     "test",
+    "release",
 ]
