@@ -5,7 +5,6 @@ cargo clippy -- \
 	-W clippy::nursery \
 	-W clippy::restriction \
 	-W clippy::cargo \
-	-A clippy::needless-return \
 	-A clippy::missing-docs-in-private-items \
 	-A clippy::integer_division \
 	-A clippy::implicit_return \

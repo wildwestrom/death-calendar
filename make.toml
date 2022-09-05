@@ -13,6 +13,7 @@ args = ["test"]
 
 [tasks.lint]
 script = { file = "bin/clippy.sh" }
+dependencies = ["format"]
 
 [tasks.release]
 dependencies = ["clean"]
@@ -21,7 +22,6 @@ args = ["build", "--release"]
 
 [tasks.ci]
 dependencies = [
-    "format",
     "lint",
     "test",
     "release",

@@ -246,6 +246,5 @@ pub fn render_svg(
         }
         count += 1;
     }
-
-    return document;
+    document
 }
