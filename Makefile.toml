@@ -1,11 +1,14 @@
+# Clean
 [tasks.clean]
 command = "cargo"
 args = ["clean"]
 
+# Test
 [tasks.test]
 command = "cargo"
 args = ["test"]
 
+# Lint
 [tasks.lint]
 script = '''
 cargo clippy -- \
@@ -23,22 +26,45 @@ cargo clippy -- \
   -A clippy::std_instead_of_core
 '''
 
-[tasks.cargo-fmt-check]
+# Format
+
+## Check
+[tasks.rust-fmt-check]
 install_crate = "rustfmt"
 command = "cargo"
 args = ["fmt", "--check"]
 
 [tasks.toml-fmt-check]
+install_crate = { crate_name = "taplo-cli", binary = "taplo", test_arg = "--help" }
 command = "taplo"
-args = ["fmt", "--check", "Cargo.toml", "Makefile.toml"]
+args = ["fmt", "--check", "*.toml"]
 
-[tasks.fmt]
-dependencies = ["cargo-fmt-check", "toml-fmt-check"]
+[tasks.fmt-check]
+dependencies = ["rust-fmt-check", "toml-fmt-check"]
 
+## Fix
+[tasks.rust-fmt-fix]
+install_crate = "rustfmt"
+command = "cargo"
+args = ["fmt"]
+
+[tasks.toml-fmt-fix]
+install_crate = { crate_name = "taplo-cli", binary = "taplo", test_arg = "--help" }
+command = "taplo"
+args = ["fmt", "*.toml"]
+
+[tasks.fmt-fix]
+dependencies = ["rust-fmt-fix", "toml-fmt-fix"]
+
+# Build
 [tasks.release]
 dependencies = ["clean"]
 command = "cargo"
 args = ["build", "--release"]
 
+# Final
+[tasks.build]
+dependencies = ["fmt-fix", "lint", "test"]
+
 [tasks.ci]
-dependencies = ["fmt", "lint", "test", "release"]
+dependencies = ["fmt-check", "lint", "test", "release"]
