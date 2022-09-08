@@ -1,5 +1,4 @@
-use gregorian::Date;
-use gregorian::DateResultExt;
+use gregorian::{Date, DateResultExt};
 
 /// Compute the estimated day you will die.
 #[must_use]
