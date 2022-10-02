@@ -9,6 +9,10 @@
 
 ![Example Calendar](./preview-img.svg)
 
+> ```console
+> death-calendar svg 2000-1-1 --shape=circle --ratios=1,1,6,1,shape --scale-factor=2 --color-primary=64727D --color-secondary="#2D3436" -o preview-img.svg
+> ```
+
 Ever wonder how many days you have left to live?  
 Death Calendar can show you at a glance.
 
