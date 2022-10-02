@@ -2,10 +2,12 @@
 
 ![docs](https://github.com/wildwestrom/death-calendar/actions/workflows/docs.yml/badge.svg)
 ![tests](https://github.com/wildwestrom/death-calendar/actions/workflows/tests.yml/badge.svg)
-![format](https://github.com/wildwestrom/death-calendar/actions/workflows/format.yml/badge.svg)<!-- markdownlint-disable-line MD013 -->  
+![format](https://github.com/wildwestrom/death-calendar/actions/workflows/format.yml/badge.svg)
 ![lint](https://github.com/wildwestrom/death-calendar/actions/workflows/lint.yml/badge.svg)
 ![build](https://github.com/wildwestrom/death-calendar/actions/workflows/build.yml/badge.svg)
 ![package](https://github.com/wildwestrom/death-calendar/actions/workflows/package.yml/badge.svg)
+
+![Example Calendar](./preview-img.svg)
 
 Ever wonder how many days you have left to live?  
 Death Calendar can show you at a glance.
