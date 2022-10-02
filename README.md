@@ -7,8 +7,10 @@
 ![build](https://github.com/wildwestrom/death-calendar/actions/workflows/build.yml/badge.svg)
 ![package](https://github.com/wildwestrom/death-calendar/actions/workflows/package.yml/badge.svg)
 
-![Example Calendar](./preview-img.svg)
+![Example Calendar](./images/preview-img.svg)
 
+> Generated with:
+>
 > ```console
 > death-calendar svg 2000-1-1 --shape=circle --ratios=1,1,6,1,shape --scale-factor=2 --color-primary=64727D --color-secondary="#2D3436" -o preview-img.svg
 > ```
