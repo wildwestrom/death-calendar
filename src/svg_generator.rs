@@ -128,10 +128,6 @@ impl FromStr for DrawingRatios {
 	}
 }
 
-fn invert_color(color: HexColor) -> HexColor {
-	HexColor::new(255, 255, 255) - color
-}
-
 const WEEKS_IN_A_YEAR: u32 = 52;
 
 #[must_use]
@@ -145,7 +141,7 @@ pub fn render_svg(
 	color_secondary_hexcolor: Option<HexColor>,
 ) -> Document {
 	let color_secondary = color_secondary_hexcolor
-		.map_or_else(|| invert_color(color_primary_hexcolor), |color| color)
+		.map_or(HexColor::invert(color_primary_hexcolor), |color| color)
 		.to_string();
 
 	let color_primary = color_primary_hexcolor.to_string();

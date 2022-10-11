@@ -1,5 +1,15 @@
 use hex_color::{HexColor, ParseHexColorError};
 
+fn add_leading_hashtag(color: &str) -> String {
+	if color.starts_with('#') {
+		String::from(color)
+	} else {
+		let mut prepended = String::from("#");
+		prepended.push_str(color);
+		prepended
+	}
+}
+
 /// # Errors
 ///
 /// This function will fail if the string cannot be parsed as a <color> acceptable by the
@@ -148,5 +158,5 @@ pub fn parse_svg_color(color: &str) -> Result<HexColor, ParseHexColorError> {
 		"yellowgreen" => "9acd32",
 		s => s,
 	};
-	<HexColor as std::str::FromStr>::from_str(hex_str)
+	HexColor::parse(add_leading_hashtag(hex_str).as_str())
 }
