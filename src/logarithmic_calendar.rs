@@ -10,14 +10,17 @@ use svg::{
 	Document, Node,
 };
 
+use crate::{BirthInfo, DrawingInfoValidated};
+
 #[must_use]
-pub fn render_svg(
-	bday: Date,
-	lifespan_years: i16,
-	scale_factor: u32,
-	color_primary_hexcolor: HexColor,
-	color_secondary_hexcolor: Option<HexColor>,
-) -> Document {
+pub fn render_svg(common_args: &BirthInfo, drawing_info: &DrawingInfoValidated) -> Document {
+	let color_primary = drawing_info.color_primary.to_string();
+	let color_secondary = drawing_info.color_secondary.to_string();
+	let scale_factor = drawing_info.scale_factor;
+
+	let bday = common_args.birthday;
+	let lifespan_years = common_args.lifespan_years;
+
 	// I'm displaying fonts with length defined as pixels.
 	let font_size_pixels = 24 * scale_factor;
 	// The length of a whole number must be a multiple of the pixel length of digits
@@ -30,12 +33,6 @@ pub fn render_svg(
 
 	let viewbox_width = inner_width + text_size;
 	let viewbox_height = inner_height;
-
-	let color_secondary = color_secondary_hexcolor
-		.map_or_else(|| color_primary_hexcolor.invert(), |color| color)
-		.to_string();
-
-	let color_primary = color_primary_hexcolor.to_string();
 
 	let mut document = Document::new()
 		.set("viewBox", (0_u8, 0_u8, viewbox_width, viewbox_height))

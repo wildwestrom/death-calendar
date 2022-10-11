@@ -2,13 +2,12 @@ use std::{error::Error, str::FromStr};
 
 use death_calendar::death_day;
 use gregorian::Date;
-use hex_color::HexColor;
 use svg::{
 	node::element::{Circle, Element, Rectangle},
 	Document, Node,
 };
 
-use crate::DrawingRatios;
+use crate::{BirthInfo, DrawingInfoValidated, GridRatios};
 
 #[derive(Debug, Clone, clap::ValueEnum)]
 pub enum BorderUnit {
@@ -61,19 +60,17 @@ const WEEKS_IN_A_YEAR: u32 = 52;
 
 #[must_use]
 pub fn render_svg(
-	bday: Date,
-	lifespan_years: i16,
-	drawing_ratios: &DrawingRatios,
-	shape_type: &SvgShape,
-	scale_factor: u32,
-	color_primary_hexcolor: HexColor,
-	color_secondary_hexcolor: Option<HexColor>,
+	birth_info: &BirthInfo,
+	drawing_info: &DrawingInfoValidated,
+	drawing_ratios: &GridRatios,
+	week_shape: &SvgShape,
 ) -> Document {
-	let color_secondary = color_secondary_hexcolor
-		.map_or(HexColor::invert(color_primary_hexcolor), |color| color)
-		.to_string();
+	let color_primary = drawing_info.color_primary.to_string();
+	let color_secondary = drawing_info.color_secondary.to_string();
+	let scale_factor = drawing_info.scale_factor;
 
-	let color_primary = color_primary_hexcolor.to_string();
+	let bday = birth_info.birthday;
+	let lifespan_years = birth_info.lifespan_years;
 
 	let today = Date::today_utc();
 	let end = death_day(bday, lifespan_years);
@@ -136,7 +133,7 @@ pub fn render_svg(
 		let cy_offset =
 			((viewbox_height - grid_height) / 2) + (padding / 2) + (outer_shape_size / 2);
 		let cy = ((count % WEEKS_IN_A_YEAR) * outer_shape_size) + cy_offset;
-		let shape: Element = match *shape_type {
+		let shape: Element = match *week_shape {
 			SvgShape::Square => Rectangle::new()
 				.set("x", x)
 				.set("y", y)
