@@ -28,13 +28,17 @@ pub struct BirthInfo {
 #[derive(Parser, Debug, Clone)]
 pub struct DrawingInfo {
 	/// Optionally increase the scale of the SVG.
+	///
 	/// This can help improve scaling quality on some image viewers.
 	/// Must be a number greater than 0.
 	#[clap(long, value_parser(value_parser!(u32).range(1..)), default_value_t = 1)]
 	scale_factor: u32,
 	/// Add a primary color.
+	///
 	/// You can use a string containing (almost) any valid <color> type from the SVG 1.1
-	/// specification. https://www.w3.org/Graphics/SVG/1.1/types.html#DataTypeColor
+	/// specification.
+	///
+	/// https://www.w3.org/Graphics/SVG/1.1/types.html#DataTypeColor
 	#[clap(long, value_parser = clap::builder::ValueParser::new(parse_svg_color), default_value = "black")]
 	color_primary: HexColor,
 	/// Add a secondary color.
@@ -61,8 +65,9 @@ enum Drawing {
 		/// Shape used to represent a week
 		week_shape: SvgShape,
 	},
+	#[clap(id = "log")]
 	/// Generate an image of a logarithmic calendar
-	Log {},
+	Logarithmic {},
 }
 
 #[derive(Parser, Debug)]
@@ -72,8 +77,9 @@ enum Commands {
 		#[clap(flatten)]
 		birth_info: BirthInfo,
 	},
+	#[clap(id = "img")]
 	/// Visualize your ultimate demise
-	Drawing {
+	Image {
 		#[clap(subcommand)]
 		drawing_type: Drawing,
 		#[clap(flatten)]
@@ -112,7 +118,7 @@ fn main() -> Result<(), std::io::Error> {
 			death_info::print_death_info(common_args.birthday, common_args.lifespan_years);
 			Ok(())
 		},
-		Commands::Drawing {
+		Commands::Image {
 			drawing_type,
 			drawing_info,
 			birth_info,
@@ -139,7 +145,7 @@ fn main() -> Result<(), std::io::Error> {
 					&grid_ratios,
 					&week_shape,
 				),
-				Drawing::Log {} => {
+				Drawing::Logarithmic {} => {
 					logarithmic_calendar::render_svg(&birth_info, &drawing_info_validated)
 				},
 			};
