@@ -1,4 +1,4 @@
-use std::{error::Error, num::ParseIntError, str::FromStr};
+use std::{error::Error, str::FromStr};
 
 use death_calendar::death_day;
 use gregorian::Date;
@@ -8,10 +8,21 @@ use svg::{
 	Document, Node,
 };
 
+use crate::DrawingRatios;
+
 #[derive(Debug, Clone, clap::ValueEnum)]
 pub enum BorderUnit {
 	Pixel,
 	Shape,
+}
+
+impl std::fmt::Display for BorderUnit {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::Pixel => write!(f, "pixel"),
+			Self::Shape => write!(f, "shape"),
+		}
+	}
 }
 
 #[derive(Debug)]
@@ -44,88 +55,6 @@ impl FromStr for BorderUnit {
 pub enum SvgShape {
 	Square,
 	Circle,
-}
-
-#[derive(Debug, Clone)]
-pub struct DrawingRatios {
-	// How thick should the line around the shape be?
-	stroke: u32,
-	// How much space should be around each shape?
-	padding: u32,
-	// How long should the shape be on the inside?
-	length: u32,
-	// How much space should be around the grid?
-	border: u32,
-	// Should the border be measured in pixels or the shape?
-	border_unit: BorderUnit,
-}
-
-#[derive(Debug)]
-pub struct ParseDrawingRatiosError {
-	message: String,
-}
-
-impl std::fmt::Display for ParseDrawingRatiosError {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "\nCould not parse the ratio string: {}.", self.message)
-	}
-}
-
-impl Error for ParseDrawingRatiosError {}
-
-impl From<ParseIntError> for ParseDrawingRatiosError {
-	fn from(_: ParseIntError) -> Self {
-		Self {
-			message: "Value must be a number".into(),
-		}
-	}
-}
-
-impl From<ParseBorderUnitError> for ParseDrawingRatiosError {
-	fn from(_: ParseBorderUnitError) -> Self {
-		Self {
-			message: "Border unit can only be 'pixel' or 'shape'".into(),
-		}
-	}
-}
-
-impl<T> From<Result<T, Self>> for ParseDrawingRatiosError {
-	fn from(_: Result<T, Self>) -> Self {
-		Self {
-			message: "An error occurred".into(),
-		}
-	}
-}
-
-impl FromStr for DrawingRatios {
-	type Err = ParseDrawingRatiosError;
-
-	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		fn get_val_from_substr(
-			string_vec: &[&str],
-			i: usize,
-		) -> Result<String, ParseDrawingRatiosError> {
-			string_vec
-				.get(i)
-				.ok_or(ParseDrawingRatiosError {
-					message: format!("No value found at index {i}."),
-				})
-				.map(|s| s.to_owned().to_owned())
-		}
-		let split_str: Vec<&str> = s.split(',').collect();
-		if split_str.len() != 5 {
-			return Err(ParseDrawingRatiosError {
-				message: "You do not have the correct number of values".into(),
-			});
-		}
-		Ok(Self {
-			stroke: get_val_from_substr(&split_str, 0)?.parse()?,
-			padding: get_val_from_substr(&split_str, 1)?.parse()?,
-			length: get_val_from_substr(&split_str, 2)?.parse()?,
-			border: get_val_from_substr(&split_str, 3)?.parse()?,
-			border_unit: get_val_from_substr(&split_str, 4)?.parse()?,
-		})
-	}
 }
 
 const WEEKS_IN_A_YEAR: u32 = 52;
