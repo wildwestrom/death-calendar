@@ -7,12 +7,12 @@
 ![build](https://github.com/wildwestrom/death-calendar/actions/workflows/build.yml/badge.svg)
 ![package](https://github.com/wildwestrom/death-calendar/actions/workflows/package.yml/badge.svg)
 
-![Example Calendar](./images/preview-img.svg)
+![Example Calendar](./images/demo-img.svg)
 
 > Generated with:
 >
 > ```console
-> death-calendar svg 2000-1-1 --shape=circle --ratios=1,1,6,1,shape --scale-factor=2 --color-primary=64727D --color-secondary="#2D3436" -o preview-img.svg
+> death-calendar img 2012-5-11 --scale-factor=15 --color-primary=64727D --color-secondary=2D3436 -o=images/demo-img.svg log --width-height-ratio=8
 > ```
 
 Ever wonder how many days you have left to live?  
