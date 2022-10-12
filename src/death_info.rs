@@ -5,7 +5,7 @@ use death_calendar::{
 use gregorian::Date;
 
 #[allow(clippy::print_stdout)]
-#[allow(clippy::uninlined_format_args)]
+// #[allow(clippy::uninlined_format_args)] // Nightly only for now
 pub fn show(bday: Date, years: i16) {
 	let today: Date = Date::today_utc();
 	println!("Your birthday is {}.", bday);
