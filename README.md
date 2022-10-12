@@ -56,7 +56,6 @@ cp target/release/death-calendar [DESTINATION]
 ### New Calendar Render Ideas
 
 - Make a spiral calendar
-- Make a logarithmic calendar
 - Represent your time as an hourglass
 
 ## License
