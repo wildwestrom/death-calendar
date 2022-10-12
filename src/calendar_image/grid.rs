@@ -17,10 +17,14 @@ pub enum BorderUnit {
 
 impl std::fmt::Display for BorderUnit {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		match self {
-			Self::Pixel => write!(f, "pixel"),
-			Self::Shape => write!(f, "shape"),
-		}
+		write!(
+			f,
+			"{}",
+			match *self {
+				Self::Pixel => "pixel",
+				Self::Shape => "shape",
+			}
+		)
 	}
 }
 
@@ -100,7 +104,7 @@ pub fn render_svg(
 
 	let mut document = Document::new()
 		.set("viewBox", (0_u8, 0_u8, viewbox_width, viewbox_height))
-		.set("style", format!("background-color:{}", color_primary));
+		.set("style", format!("background-color:{color_primary}"));
 
 	let background = Rectangle::new()
 		.set("x", 0_u8)

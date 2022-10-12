@@ -2,10 +2,12 @@ use std::path::PathBuf;
 
 use clap::{value_parser, Parser};
 use hex_color::HexColor;
+mod calendar_image;
 mod death_info;
-mod grid_calendar;
-use grid_calendar::{BorderUnit, SvgShape};
-mod logarithmic_calendar;
+use calendar_image::{
+	grid::{self, BorderUnit, SvgShape},
+	logarithmic,
+};
 mod parse_color;
 use parse_color::parse_svg_color;
 
@@ -115,7 +117,7 @@ fn main() -> Result<(), std::io::Error> {
 		Commands::Info {
 			birth_info: common_args,
 		} => {
-			death_info::print_death_info(common_args.birthday, common_args.lifespan_years);
+			death_info::show(common_args.birthday, common_args.lifespan_years);
 			Ok(())
 		},
 		Commands::Image {
@@ -139,24 +141,24 @@ fn main() -> Result<(), std::io::Error> {
 				Drawing::Grid {
 					grid_ratios,
 					week_shape,
-				} => grid_calendar::render_svg(
+				} => grid::render_svg(
 					&birth_info,
 					&drawing_info_validated,
 					&grid_ratios,
 					&week_shape,
 				),
 				Drawing::Logarithmic {} => {
-					logarithmic_calendar::render_svg(&birth_info, &drawing_info_validated)
+					logarithmic::render_svg(&birth_info, &drawing_info_validated)
 				},
 			};
 
+			#[allow(clippy::print_stdout)]
 			if let Some(filename) = drawing_info.output {
 				svg::save(filename, &document)?;
-				Ok(())
 			} else {
-				println!("{}", document);
-				Ok(())
+				println!("{document}");
 			}
+			Ok(())
 		},
 	}
 }

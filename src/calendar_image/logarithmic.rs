@@ -1,16 +1,19 @@
-#![allow(unused_imports)]
-
-use std::{error::Error, num::ParseIntError, str::FromStr};
-
-use death_calendar::{days_lived, death_day, years_left, years_lived};
-use gregorian::{Date, DateResultExt};
-use hex_color::HexColor;
+use death_calendar::days_lived;
+use gregorian::Date;
 use svg::{
-	node::element::{Circle, Element, Line, Rectangle},
+	node::element::{Circle, Line, Rectangle},
 	Document, Node,
 };
 
 use crate::{BirthInfo, DrawingInfoValidated};
+
+#[allow(clippy::default_numeric_fallback)] // This is due to a false positive
+const AVERAGE_DAYS_IN_YEAR: f64 = 365.2425;
+
+fn position_from_0_to_1(lifespan: i16, inc: f64) -> f64 {
+	let lifespanf = f64::from(lifespan);
+	1.0_f64 - (f64::powf(lifespanf + 1.0_f64, 1.0_f64 - (inc / lifespanf)) - 1.0_f64) / lifespanf
+}
 
 #[must_use]
 pub fn render_svg(common_args: &BirthInfo, drawing_info: &DrawingInfoValidated) -> Document {
@@ -36,7 +39,7 @@ pub fn render_svg(common_args: &BirthInfo, drawing_info: &DrawingInfoValidated) 
 
 	let mut document = Document::new()
 		.set("viewBox", (0_u8, 0_u8, viewbox_width, viewbox_height))
-		.set("style", format!("background-color:{}", color_primary));
+		.set("style", format!("background-color:{color_primary}"));
 
 	let background = Rectangle::new()
 		.set("x", 0_u8)
@@ -59,17 +62,10 @@ pub fn render_svg(common_args: &BirthInfo, drawing_info: &DrawingInfoValidated) 
 		.set("stroke-width", stroke_width);
 	document.append(line);
 
-	fn position_from_0_to_1(lifespan: i16, inc: f64) -> f64 {
-		1.0 - (f64::powf(lifespan as f64 + 1.0, 1.0 - (inc / lifespan as f64)) - 1.0)
-			/ lifespan as f64
-	}
+	let years_lived_so_far = f64::from(days_lived(Date::today_utc(), bday)) / AVERAGE_DAYS_IN_YEAR;
 
-	const AVERAGE_DAYS_IN_YEAR: f64 = 365.2425;
-	let years_lived_so_far = days_lived(Date::today_utc(), bday) as f64 / AVERAGE_DAYS_IN_YEAR;
-
-	let scale_pos_bday = position_from_0_to_1(lifespan_years, years_lived_so_far as f64)
-		* inner_width as f64
-		+ (padding / 2) as f64;
+	let scale_pos_bday = position_from_0_to_1(lifespan_years, years_lived_so_far)
+		.mul_add(f64::from(inner_width), f64::from(padding / 2));
 
 	let birthday_dot_color = "red";
 	let birthday_dot = Circle::new()
@@ -79,13 +75,14 @@ pub fn render_svg(common_args: &BirthInfo, drawing_info: &DrawingInfoValidated) 
 		.set("fill", birthday_dot_color);
 	document.append(birthday_dot);
 
-	let mut prev = 0.0;
-	let mut curr = 0.0;
+	let mut prev = 0.0_f64;
+	let mut curr = 0.0_f64;
 	let last_scale_pos =
-		position_from_0_to_1(lifespan_years, lifespan_years.into()) * inner_width as f64;
+		position_from_0_to_1(lifespan_years, lifespan_years.into()) * f64::from(inner_width);
 
 	for i in 0..=lifespan_years {
-		let current_scale_pos = position_from_0_to_1(lifespan_years, i as f64) * inner_width as f64;
+		let current_scale_pos = position_from_0_to_1(lifespan_years, f64::from(i))
+			.mul_add(f64::from(inner_width), f64::from(padding / 2));
 		let year_num = i;
 
 		let mut add_year_label = || {
@@ -93,19 +90,19 @@ pub fn render_svg(common_args: &BirthInfo, drawing_info: &DrawingInfoValidated) 
 			document.append(
 				svg::node::element::Text::new()
 					.set("y", font_size_pixels)
-					.set("x", current_scale_pos + (padding / 2) as f64)
+					.set("x", current_scale_pos)
 					.set("fill", color_primary.as_str())
-					.set("font-size", format!("{}px", font_size_pixels))
+					.set("font-size", format!("{font_size_pixels}px"))
 					.set("text-anchor", "middle")
-					.add(svg::node::Text::new(format!("{}", year_num))),
+					.add(svg::node::Text::new(format!("{year_num}"))),
 			);
 			// Vertical Lines
 			document.append(
 				Line::new()
 					.set("y1", font_size_pixels * 2)
-					.set("x1", current_scale_pos + (padding / 2) as f64)
+					.set("x1", current_scale_pos)
 					.set("y2", inner_height - font_size_pixels)
-					.set("x2", current_scale_pos + (padding / 2) as f64)
+					.set("x2", current_scale_pos)
 					.set("stroke-width", stroke_width)
 					.set("stroke", color_primary.as_str()),
 			);
