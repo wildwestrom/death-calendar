@@ -1,3 +1,4 @@
+use anyhow::Result;
 use death_calendar::{
 	days_left, days_lived, death_day, lifespan_days, lifespan_months, lifespan_weeks, months_left,
 	months_lived, weeks_left, weeks_lived, years_left, years_lived,
@@ -6,7 +7,8 @@ use gregorian::Date;
 
 #[allow(clippy::print_stdout)]
 // #[allow(clippy::uninlined_format_args)] // Nightly only for now
-pub fn show(bday: Date, years: i16) {
+pub fn show(bday: Date, lifespan_years: u16) -> Result<()> {
+	let years: i16 = lifespan_years.try_into()?;
 	let today: Date = Date::today_utc();
 	println!("Your birthday is {}.", bday);
 	println!();
@@ -28,4 +30,5 @@ pub fn show(bday: Date, years: i16) {
 	println!("- {} weeks", weeks_left(today, bday, years).abs());
 	println!("- {} months", months_left(today, bday, years).abs());
 	println!("- {} years", years_left(today, bday, years).abs());
+	Ok(())
 }

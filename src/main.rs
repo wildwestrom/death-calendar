@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use anyhow::Result;
 use clap::{value_parser, Parser};
 use hex_color::HexColor;
 mod calendar_image;
@@ -10,6 +11,7 @@ use calendar_image::{
 };
 mod parse_color;
 use parse_color::parse_svg_color;
+use svg::Document;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -24,7 +26,7 @@ pub struct BirthInfo {
 	birthday: gregorian::Date,
 	/// Expected lifespan in years
 	#[clap(short, long, default_value_t = 100)]
-	lifespan_years: i16,
+	lifespan_years: u16,
 }
 
 #[derive(Parser, Debug, Clone)]
@@ -69,7 +71,10 @@ enum Drawing {
 	},
 	#[clap(id = "log")]
 	/// Generate an image of a logarithmic calendar
-	Logarithmic {},
+	Logarithmic {
+		#[clap(long, default_value_t = 8.0)]
+		width_height_ratio: f64,
+	},
 }
 
 #[derive(Parser, Debug)]
@@ -110,16 +115,13 @@ pub struct GridRatios {
 	border_unit: BorderUnit,
 }
 
-fn main() -> Result<(), std::io::Error> {
+fn main() -> Result<()> {
 	let args = Args::parse();
 
 	match args.command {
 		Commands::Info {
 			birth_info: common_args,
-		} => {
-			death_info::show(common_args.birthday, common_args.lifespan_years);
-			Ok(())
-		},
+		} => death_info::show(common_args.birthday, common_args.lifespan_years),
 		Commands::Image {
 			drawing_type,
 			drawing_info,
@@ -137,7 +139,7 @@ fn main() -> Result<(), std::io::Error> {
 				},
 			};
 
-			let document = match drawing_type {
+			let document: Document = match drawing_type {
 				Drawing::Grid {
 					grid_ratios,
 					week_shape,
@@ -146,10 +148,12 @@ fn main() -> Result<(), std::io::Error> {
 					&drawing_info_validated,
 					&grid_ratios,
 					&week_shape,
-				),
-				Drawing::Logarithmic {} => {
-					logarithmic::render_svg(&birth_info, &drawing_info_validated)
-				},
+				)?,
+				Drawing::Logarithmic { width_height_ratio } => logarithmic::render_svg(
+					&birth_info,
+					&drawing_info_validated,
+					width_height_ratio,
+				)?,
 			};
 
 			#[allow(clippy::print_stdout)]

@@ -1,6 +1,6 @@
 [package]
 name = "death-calendar"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 description = "Calculate how much time you have until your ultimate demise."
 license = "GPL-3.0-or-later"
@@ -16,3 +16,4 @@ clap = { version = "4", features = ["derive"] }
 gregorian = "0.2"
 svg = "0.10"
 hex_color = "2"
+anyhow = "1.0.65"

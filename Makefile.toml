@@ -21,6 +21,7 @@ cargo clippy -- \
   -A clippy::integer_arithmetic \
   -A clippy::integer_division \
 	-A clippy::float_arithmetic \
+	-A clippy::cast_precision_loss \
   -A clippy::missing-docs-in-private-items \
   -A clippy::implicit_return \
   -A clippy::separated_literal_suffix \

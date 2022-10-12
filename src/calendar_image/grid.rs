@@ -1,5 +1,6 @@
 use std::{error::Error, str::FromStr};
 
+use anyhow::Result;
 use death_calendar::death_day;
 use gregorian::Date;
 use svg::{
@@ -8,6 +9,8 @@ use svg::{
 };
 
 use crate::{BirthInfo, DrawingInfoValidated, GridRatios};
+
+use super::{init_document, WEEKS_IN_A_YEAR};
 
 #[derive(Debug, Clone, clap::ValueEnum)]
 pub enum BorderUnit {
@@ -60,15 +63,12 @@ pub enum SvgShape {
 	Circle,
 }
 
-const WEEKS_IN_A_YEAR: u32 = 52;
-
-#[must_use]
 pub fn render_svg(
 	birth_info: &BirthInfo,
 	drawing_info: &DrawingInfoValidated,
 	drawing_ratios: &GridRatios,
 	week_shape: &SvgShape,
-) -> Document {
+) -> Result<Document> {
 	let color_primary = drawing_info.color_primary.to_string();
 	let color_secondary = drawing_info.color_secondary.to_string();
 	let scale_factor = drawing_info.scale_factor;
@@ -77,7 +77,7 @@ pub fn render_svg(
 	let lifespan_years = birth_info.lifespan_years;
 
 	let today = Date::today_utc();
-	let end = death_day(bday, lifespan_years);
+	let end = death_day(bday, lifespan_years.try_into()?);
 
 	let stroke_width = drawing_ratios.stroke * scale_factor * 2;
 
@@ -102,18 +102,12 @@ pub fn render_svg(
 	let viewbox_width = grid_width + (border * 2) + (padding * 2);
 	let viewbox_height = grid_height + (border * 2) + (padding * 2);
 
-	let mut document = Document::new()
-		.set("viewBox", (0_u8, 0_u8, viewbox_width, viewbox_height))
-		.set("style", format!("background-color:{color_primary}"));
-
-	let background = Rectangle::new()
-		.set("x", 0_u8)
-		.set("y", 0_u8)
-		.set("width", viewbox_width)
-		.set("height", viewbox_height)
-		.set("fill", color_secondary.as_str());
-
-	document.append(background);
+	let mut document = init_document(
+		viewbox_width.into(),
+		viewbox_height.into(),
+		&color_primary,
+		&color_secondary,
+	);
 
 	let mut count = 0;
 	let mut curr_date = bday;
@@ -169,5 +163,5 @@ pub fn render_svg(
 		}
 		count += 1;
 	}
-	document
+	Ok(document)
 }
