@@ -58,6 +58,10 @@ cp target/release/death-calendar [DESTINATION]
 - Make a spiral calendar
 - Represent your time as an hourglass
 
+### Non Goals (For Now)
+
+- Calculate estimated lifespan based on lifestyle, income, genetics, etc.
+
 ## License
 
 Death Calendar: Calculate how much time you have until your ultimate demise.  
