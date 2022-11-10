@@ -8,15 +8,10 @@ pub const AVERAGE_DAYS_IN_YEAR: f64 = 365.2425;
 pub const PHI: f64 = 1.618_033_988_749_895;
 pub const WEEKS_IN_A_YEAR: u32 = 52;
 
-pub fn init_document(
-	viewbox_width: f64,
-	viewbox_height: f64,
-	color_primary: &str,
-	color_secondary: &str,
-) -> Document {
+pub fn init_document(viewbox_width: f64, viewbox_height: f64, color_secondary: &str) -> Document {
 	let mut document = Document::new()
 		.set("viewBox", (0_u8, 0_u8, viewbox_width, viewbox_height))
-		.set("style", format!("background-color:{color_primary}"));
+		.set("style", format!("background-color:{color_secondary}"));
 
 	let background = Rectangle::new()
 		.set("x", 0_u8)

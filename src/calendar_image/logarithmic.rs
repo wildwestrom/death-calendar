@@ -82,7 +82,6 @@ pub fn render_svg(
 	let mut document = init_document(
 		viewbox_width,
 		viewbox_height,
-		&color_primary,
 		&color_secondary,
 	);
 
