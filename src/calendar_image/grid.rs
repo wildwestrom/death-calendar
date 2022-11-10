@@ -87,7 +87,7 @@ pub fn render_svg(
 
 	let border = match drawing_ratios.border_unit {
 		BorderUnit::Pixel => drawing_ratios.border * scale_factor,
-		BorderUnit::Shape => drawing_ratios.border * scale_factor * outer_shape_size,
+		BorderUnit::Shape => drawing_ratios.border * outer_shape_size,
 	};
 
 	// In total, the outer dimensions of a shape is a function of its stroke-width x 2,
