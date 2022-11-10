@@ -8,9 +8,8 @@ use svg::{
 	Document, Node,
 };
 
-use crate::{BirthInfo, DrawingInfoValidated, GridRatios};
-
 use super::{init_document, WEEKS_IN_A_YEAR};
+use crate::{BirthInfo, DrawingInfoValidated, GridRatios};
 
 #[derive(Debug, Clone, clap::ValueEnum)]
 pub enum BorderUnit {

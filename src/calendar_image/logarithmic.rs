@@ -1,8 +1,7 @@
 use std::num::TryFromIntError;
 
-use death_calendar::days_lived;
-
 use anyhow::Result;
+use death_calendar::days_lived;
 use gregorian::Date;
 use svg::{
 	node::{
@@ -12,9 +11,8 @@ use svg::{
 	Document, Node,
 };
 
-use crate::{BirthInfo, DrawingInfoValidated};
-
 use super::{init_document, AVERAGE_DAYS_IN_YEAR, PHI};
+use crate::{BirthInfo, DrawingInfoValidated};
 
 fn position_from_0_to_1(lifespan: u16, inc: f64) -> f64 {
 	let lifespanf = f64::from(lifespan);
@@ -79,11 +77,7 @@ pub fn render_svg(
 	let viewbox_width = padding_x.mul_add(2.0, inner_width);
 	let viewbox_height = padding_y.mul_add(2.0, inner_height);
 
-	let mut document = init_document(
-		viewbox_width,
-		viewbox_height,
-		&color_secondary,
-	);
+	let mut document = init_document(viewbox_width, viewbox_height, &color_secondary);
 
 	let position_within_inner_viewbox = |inc: f64| -> f64 {
 		position_from_0_to_1(lifespan_years, inc).mul_add(inner_width, padding_x)
@@ -111,14 +105,19 @@ pub fn render_svg(
 	let top_of_line_height = font_size_pixels + padding_y + arrow_length;
 	let initial_x = position_within_inner_viewbox(0_f64);
 	let final_x = position_within_inner_viewbox(lifespan_years.into());
-	document.append(Polyline::new()
-		.set(
-			"points",
-			format!("{initial_x} {top_of_line_height},{initial_x} {baseline_height},{final_x} {baseline_height},{final_x} {top_of_line_height}")
-		)
-		.set("fill", "none")
-		.set("stroke-width", stroke_width)
-		.set("stroke", color_primary.as_str()));
+	document.append(
+		Polyline::new()
+			.set(
+				"points",
+				format!(
+					"{initial_x} {top_of_line_height},{initial_x} {baseline_height},{final_x} \
+					 {baseline_height},{final_x} {top_of_line_height}"
+				),
+			)
+			.set("fill", "none")
+			.set("stroke-width", stroke_width)
+			.set("stroke", color_primary.as_str()),
+	);
 
 	document.append(
 		Text::new()
