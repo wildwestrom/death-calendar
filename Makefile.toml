@@ -42,8 +42,12 @@ install_crate = { crate_name = "taplo-cli", binary = "taplo", test_arg = "--help
 command = "taplo"
 args = ["fmt", "--check", "*.toml"]
 
+[tasks.md-fmt-check]
+command = "markdownlint"
+args = ["*.md", "--config", ".markdownlint.jsonc"]
+
 [tasks.fmt-check]
-dependencies = ["rust-fmt-check", "toml-fmt-check"]
+dependencies = ["rust-fmt-check", "toml-fmt-check", "md-fmt-check"]
 
 ## Fix
 [tasks.rust-fmt-fix]
@@ -56,8 +60,12 @@ install_crate = { crate_name = "taplo-cli", binary = "taplo", test_arg = "--help
 command = "taplo"
 args = ["fmt", "*.toml"]
 
+[tasks.md-fmt-fix]
+command = "markdownlint"
+args = ["*.md", "--config", ".markdownlint.jsonc", "--fix"]
+
 [tasks.fmt-fix]
-dependencies = ["rust-fmt-fix", "toml-fmt-fix"]
+dependencies = ["rust-fmt-fix", "toml-fmt-fix", "md-fmt-fix"]
 
 # Build
 [tasks.release]
