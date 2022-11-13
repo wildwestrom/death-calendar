@@ -11,7 +11,7 @@ pub const WEEKS_IN_A_YEAR: u32 = 52;
 pub fn init_document(viewbox_width: f64, viewbox_height: f64, color_secondary: &str) -> Document {
 	let mut document = Document::new()
 		.set("viewBox", (0_u8, 0_u8, viewbox_width, viewbox_height))
-		.set("style", format!("background-color:{color_secondary}"));
+		.set("style", format!("fill:{color_secondary}"));
 
 	let background = Rectangle::new()
 		.set("x", 0_u8)
