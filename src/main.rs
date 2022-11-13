@@ -2,15 +2,13 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::{value_parser, Parser};
-use hex_color::HexColor;
 mod calendar_image;
 mod death_info;
 use calendar_image::{
 	grid::{self, BorderUnit, SvgShape},
 	logarithmic,
 };
-mod parse_color;
-use parse_color::parse_svg_color;
+use csscolorparser::{parse as parse_css_color, Color};
 use svg::Document;
 
 #[derive(Parser, Debug)]
@@ -29,7 +27,7 @@ pub struct BirthInfo {
 	lifespan_years: u16,
 }
 
-#[derive(Parser, Debug, Clone)]
+#[derive(Parser, Debug)]
 pub struct DrawingInfo {
 	/// Optionally increase the scale of the SVG.
 	///
@@ -39,15 +37,13 @@ pub struct DrawingInfo {
 	scale_factor: u32,
 	/// Add a primary color.
 	///
-	/// You can use a string containing (almost) any valid <color> type from the SVG 1.1
-	/// specification.
-	///
-	/// https://www.w3.org/Graphics/SVG/1.1/types.html#DataTypeColor
-	#[clap(long, value_parser = clap::builder::ValueParser::new(parse_svg_color), default_value = "black")]
-	color_primary: HexColor,
+	/// You can use a string containing any valid CSS3 color.
+	/// Uses [csscolorparser](https://crates.io/crates/csscolorparser).
+	#[clap(long, value_parser(parse_css_color), default_value = "black")]
+	color_primary: Color,
 	/// Add a secondary color.
-	#[clap(long, value_parser = clap::builder::ValueParser::new(parse_svg_color))]
-	color_secondary: Option<HexColor>,
+	#[clap(long, value_parser(parse_css_color))]
+	color_secondary: Option<Color>,
 	/// Save SVG to a file instead of printing to stdout
 	#[clap(short, long)]
 	output: Option<PathBuf>,
@@ -55,8 +51,8 @@ pub struct DrawingInfo {
 
 pub struct DrawingInfoValidated {
 	scale_factor: u32,
-	color_primary: HexColor,
-	color_secondary: HexColor,
+	color_primary: Color,
+	color_secondary: Color,
 }
 
 #[derive(Parser, Debug)]
@@ -96,7 +92,7 @@ enum Commands {
 	},
 }
 
-#[derive(Parser, Debug, Clone)]
+#[derive(Parser, Debug)]
 pub struct GridRatios {
 	#[clap(long, default_value_t = 1)]
 	/// How thick should the line around each shape be?
@@ -127,14 +123,15 @@ fn main() -> Result<()> {
 			drawing_info,
 			birth_info,
 		} => {
+			let color = drawing_info.color_primary;
 			let drawing_info_validated = DrawingInfoValidated {
 				scale_factor: drawing_info.scale_factor,
-				color_primary: drawing_info.color_primary,
+				color_primary: color.clone(),
 				color_secondary: {
 					if let Some(color) = drawing_info.color_secondary {
 						color
 					} else {
-						drawing_info.color_primary.invert()
+						Color::new(1.0 - color.r, 1.0 - color.g, 1.0 - color.b, color.a)
 					}
 				},
 			};

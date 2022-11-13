@@ -51,8 +51,8 @@ pub fn render_svg(
 	drawing_info: &DrawingInfoValidated,
 	width_to_height_ratio: f64,
 ) -> Result<Document> {
-	let color_primary = drawing_info.color_primary.to_string();
-	let color_secondary = drawing_info.color_secondary.to_string();
+	let color_primary = drawing_info.color_primary.to_hex_string();
+	let color_secondary = drawing_info.color_secondary.to_hex_string();
 	let scale_factor = drawing_info.scale_factor;
 
 	let bday = common_args.birthday;

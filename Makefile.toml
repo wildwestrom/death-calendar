@@ -17,7 +17,7 @@ cargo clippy -- \
   -D clippy::nursery \
   -D clippy::restriction \
   -D clippy::cargo \
-	-A clippy::arithmetic \
+	-A clippy::arithmetic_side_effects \
   -A clippy::integer_arithmetic \
   -A clippy::integer_division \
 	-A clippy::float_arithmetic \
@@ -26,7 +26,8 @@ cargo clippy -- \
   -A clippy::implicit_return \
   -A clippy::separated_literal_suffix \
   -A clippy::std_instead_of_core \
-	-A clippy::mod_module_files
+	-A clippy::mod_module_files \
+	-A clippy::option-if-let-else
 '''
 
 # Format
