@@ -47,13 +47,11 @@ Make sure you have a working rust toolchain.
 ```shell
 # Shallow clone the repository
 git clone --depth 1 https://github.com/wildwestrom/death-calendar
-# Move into it
-cd death-calendar
-# Compile it
-cargo build --release
-# Now copy the newly compiled file to a location on your $PATH
-cp target/release/death-calendar [DESTINATION]
+# Install it via cargo install
+cargo install --path death-calendar
 ```
+
+Make sure `$CARGO_HOME/bin/` on your `$PATH` so you can run it.
 
 ## Goals
 
