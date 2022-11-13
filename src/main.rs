@@ -123,15 +123,15 @@ fn main() -> Result<()> {
 			drawing_info,
 			birth_info,
 		} => {
-			let color = drawing_info.color_primary;
+			let p_color = drawing_info.color_primary;
 			let drawing_info_validated = DrawingInfoValidated {
 				scale_factor: drawing_info.scale_factor,
-				color_primary: color.clone(),
+				color_primary: p_color.clone(),
 				color_secondary: {
 					if let Some(color) = drawing_info.color_secondary {
 						color
 					} else {
-						Color::new(1.0 - color.r, 1.0 - color.g, 1.0 - color.b, color.a)
+						Color::new(1.0 - p_color.r, 1.0 - p_color.g, 1.0 - p_color.b, p_color.a)
 					}
 				},
 			};
