@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{error::Error as StdError, path::PathBuf};
 
 mod calendar_image;
 mod death_info;
@@ -20,36 +20,51 @@ static QUALIFIER: &str = "xyz";
 static ORGANIZATION: &str = "Westrom";
 static APPLICATION: &str = "death-calendar";
 
-#[allow(clippy::expect_used)]
-static PROJECT_DIRS: Lazy<ProjectDirs> = Lazy::new(|| {
-	ProjectDirs::from(QUALIFIER, ORGANIZATION, APPLICATION).expect(
-		r#"Could not find standard directories for storing application configuration and data.
-Is there a $HOME or Users directory?"#,
-	)
+#[derive(Debug)]
+struct ProjectDirsNotFoundError;
+
+impl StdError for ProjectDirsNotFoundError {
+	fn description(&self) -> &str {
+		"Could not find standard directories for storing application configuration and data."
+	}
+}
+
+impl std::fmt::Display for ProjectDirsNotFoundError {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "ProjectDirsNotFound")
+	}
+}
+
+static PROJECT_DIRS: Lazy<Result<ProjectDirs, ProjectDirsNotFoundError>> = Lazy::new(|| {
+	ProjectDirs::from(QUALIFIER, ORGANIZATION, APPLICATION).ok_or(ProjectDirsNotFoundError)
 });
 
-static CONFIG_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
-	let mut file = PROJECT_DIRS.preference_dir().to_path_buf();
+static CONFIG_FILE_PATH: Lazy<Option<PathBuf>> = Lazy::new(|| {
+	let mut file = PROJECT_DIRS.as_ref().ok()?.preference_dir().to_path_buf();
 	file.push("config.toml");
-	file
+	Some(file)
 });
 
-static BIRTHDAY_FILE_PATH: Lazy<PathBuf> = Lazy::new(|| {
-	let mut file = PROJECT_DIRS.data_dir().to_path_buf();
+static BIRTHDAY_FILE_PATH: Lazy<Option<PathBuf>> = Lazy::new(|| {
+	let mut file = PROJECT_DIRS.as_ref().ok()?.data_dir().to_path_buf();
 	file.push("birthday");
-	file
+	Some(file)
 });
 
 #[derive(Parser, Debug, Serialize, Deserialize)]
 #[clap(author, version, about, long_about = {
-	format!(
-		r#"Calculate how much time you have until your ultimate demise.
-
-To use the same options each time, you can put a config file in `{}`.
-You can also put a file in `{}` that contains a single string with your birthday in YYYY-MM-DD format to calculate your estimated time of death the same way each time."#,
-		CONFIG_FILE_PATH.to_string_lossy(),
-		BIRTHDAY_FILE_PATH.to_string_lossy(),
-	)
+	let conf_file_or_msg = CONFIG_FILE_PATH
+		.as_ref()
+		.map_or("Could not find directory for config file.".to_string(),
+						|p| p.to_string_lossy().to_string());
+	let bday_file_or_msg = BIRTHDAY_FILE_PATH
+		.as_ref()
+		.map_or("Could not find directory for birthday data file".to_string(),
+						|p| p.to_string_lossy().to_string());
+	format!("Calculate how much time you have until your ultimate demise.\n\nTo use the same options \
+each time, you can put a config file in `{conf_file_or_msg}`. You can also put a file in \
+`{bday_file_or_msg}` that contains a single string with your birthday in YYYY-MM-DD format to \
+calculate your estimated time of death the same way each time.")
 })]
 struct Cli {
 	#[clap(subcommand)]
@@ -155,11 +170,11 @@ pub struct GridRatios {
 }
 
 fn build_cli() -> Result<Cli> {
-	let cli: Cli = Figment::new()
-		.merge(Serialized::defaults(Cli::parse()))
-		.merge(Toml::file(CONFIG_FILE_PATH.as_path()))
-		.extract()?;
-	Ok(cli)
+	let mut cli = Figment::new().merge(Serialized::defaults(Cli::parse()));
+	if let Some(path) = CONFIG_FILE_PATH.as_ref() {
+		cli = cli.merge(Toml::file(path.as_path()));
+	}
+	Ok(cli.extract()?)
 }
 
 fn main() -> Result<()> {
