@@ -12,7 +12,7 @@ use svg::{
 };
 
 use super::{init_document, AVERAGE_DAYS_IN_YEAR, PHI};
-use crate::{BirthInfo, DrawingInfoValidated};
+use crate::{DrawingInfoValidated, LifeInfo};
 
 fn position_from_0_to_1(lifespan: u16, inc: f64) -> f64 {
 	let lifespanf = f64::from(lifespan);
@@ -47,7 +47,7 @@ fn num_to_charcount(num: u32) -> Result<u32> {
 }
 
 pub fn render_svg(
-	common_args: &BirthInfo,
+	common_args: &LifeInfo,
 	drawing_info: &DrawingInfoValidated,
 	width_to_height_ratio: f64,
 ) -> Result<Document> {
