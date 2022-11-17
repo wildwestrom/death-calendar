@@ -55,11 +55,11 @@ static BIRTHDAY_FILE_PATH: Lazy<Option<PathBuf>> = Lazy::new(|| {
 #[clap(author, version, about, long_about = {
 	let conf_file_or_msg = CONFIG_FILE_PATH
 		.as_ref()
-		.map_or("Could not find directory for config file.".to_string(),
+		.map_or("Could not find path to config file.".to_string(),
 						|p| p.to_string_lossy().to_string());
 	let bday_file_or_msg = BIRTHDAY_FILE_PATH
 		.as_ref()
-		.map_or("Could not find directory for birthday data file".to_string(),
+		.map_or("Could not find path to birthday data file".to_string(),
 						|p| p.to_string_lossy().to_string());
 	format!("Calculate how much time you have until your ultimate demise.\n\nTo use the same options \
 each time, you can put a config file in `{conf_file_or_msg}`. You can also put a file in \
