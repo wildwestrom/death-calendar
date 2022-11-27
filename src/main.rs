@@ -7,10 +7,6 @@ use calendar_image::grid::{BorderUnit, SvgShape};
 use clap::{value_parser, Parser};
 use csscolorparser::{parse as parse_css_color, Color};
 use directories::ProjectDirs;
-use figment::{
-	providers::{Format, Serialized, Toml},
-	Figment,
-};
 use gregorian::Date;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
@@ -169,16 +165,8 @@ pub struct GridRatios {
 	border_unit: BorderUnit,
 }
 
-fn build_cli() -> Result<Cli> {
-	let mut cli = Figment::new().merge(Serialized::defaults(Cli::parse()));
-	if let Some(path) = CONFIG_FILE_PATH.as_ref() {
-		cli = cli.merge(Toml::file(path.as_path()));
-	}
-	Ok(cli.extract()?)
-}
-
 fn main() -> Result<()> {
-	let cli = build_cli()?;
+	let cli = Cli::parse();
 	let life_info = cli.life_info;
 	match cli.command {
 		Commands::Info => death_info::show(life_info.birthday, life_info.lifespan_years),
