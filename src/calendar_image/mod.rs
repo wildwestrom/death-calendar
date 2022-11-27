@@ -1,5 +1,9 @@
-#![allow(clippy::default_numeric_fallback)] // This is due to a false positive
+#![allow(clippy::default_numeric_fallback)]
+use csscolorparser::Color;
+// This is due to a false positive
 use svg::{node::element::Rectangle, Document, Node};
+
+use crate::{Drawing, DrawingInfo, DrawingInfoValidated, LifeInfo};
 
 pub mod grid;
 pub mod logarithmic;
@@ -11,7 +15,7 @@ pub const WEEKS_IN_A_YEAR: u32 = 52;
 pub fn init_document(viewbox_width: f64, viewbox_height: f64, color_secondary: &str) -> Document {
 	let mut document = Document::new()
 		.set("viewBox", (0_u8, 0_u8, viewbox_width, viewbox_height))
-		.set("style", format!("background-color:{color_secondary}"));
+		.set("style", format!("fill:{color_secondary}"));
 
 	let background = Rectangle::new()
 		.set("x", 0_u8)
@@ -22,4 +26,49 @@ pub fn init_document(viewbox_width: f64, viewbox_height: f64, color_secondary: &
 	document.append(background);
 
 	document
+}
+
+fn linear_invert_color(c: &Color) -> Color {
+	Color::new(1.0 - c.r, 1.0 - c.g, 1.0 - c.b, c.a)
+}
+
+pub fn draw_calendar(
+	drawing_type: Drawing,
+	drawing_info: DrawingInfo,
+	life_info: &LifeInfo,
+) -> anyhow::Result<()> {
+	let drawing_info_validated = DrawingInfoValidated {
+		scale_factor: drawing_info.scale_factor,
+		color_primary: drawing_info.color_primary.clone(),
+		color_secondary: {
+			if let Some(color) = drawing_info.color_secondary {
+				color
+			} else {
+				linear_invert_color(&drawing_info.color_primary)
+			}
+		},
+	};
+
+	let document: Document = match drawing_type {
+		Drawing::Grid {
+			grid_ratios,
+			week_shape,
+		} => grid::render_svg(
+			life_info,
+			&drawing_info_validated,
+			&grid_ratios,
+			&week_shape,
+		)?,
+		Drawing::Logarithmic { width_height_ratio } => {
+			logarithmic::render_svg(life_info, &drawing_info_validated, width_height_ratio)?
+		},
+	};
+
+	#[allow(clippy::print_stdout)]
+	if let Some(filename) = drawing_info.output {
+		svg::save(filename, &document)?;
+	} else {
+		println!("{document}");
+	}
+	Ok(())
 }

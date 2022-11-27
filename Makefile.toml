@@ -12,21 +12,23 @@ args = ["test"]
 [tasks.lint]
 script = '''
 cargo clippy -- \
-  -D clippy::all \
-  -D clippy::pedantic \
-  -D clippy::nursery \
-  -D clippy::restriction \
-  -D clippy::cargo \
-	-A clippy::arithmetic \
-  -A clippy::integer_arithmetic \
-  -A clippy::integer_division \
+	-D clippy::all \
+	-D clippy::pedantic \
+	-D clippy::nursery \
+	-D clippy::restriction \
+	-D clippy::cargo \
+	-A clippy::arithmetic_side_effects \
+	-A clippy::integer_arithmetic \
+	-A clippy::integer_division \
 	-A clippy::float_arithmetic \
 	-A clippy::cast_precision_loss \
-  -A clippy::missing-docs-in-private-items \
-  -A clippy::implicit_return \
-  -A clippy::separated_literal_suffix \
-  -A clippy::std_instead_of_core \
-	-A clippy::mod_module_files
+	-A clippy::missing-docs-in-private-items \
+	-A clippy::implicit_return \
+	-A clippy::separated_literal_suffix \
+	-A clippy::std_instead_of_core \
+	-A clippy::mod_module_files \
+	-A clippy::option_if_let_else \
+	-A clippy::missing_trait_methods
 '''
 
 # Format

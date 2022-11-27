@@ -1,17 +1,18 @@
-use std::{error::Error, str::FromStr};
+use std::str::FromStr;
 
 use anyhow::Result;
 use death_calendar::death_day;
 use gregorian::Date;
+use serde::{Deserialize, Serialize};
 use svg::{
 	node::element::{Circle, Element, Rectangle},
 	Document, Node,
 };
 
 use super::{init_document, WEEKS_IN_A_YEAR};
-use crate::{BirthInfo, DrawingInfoValidated, GridRatios};
+use crate::{DrawingInfoValidated, GridRatios, LifeInfo};
 
-#[derive(Debug, Clone, clap::ValueEnum)]
+#[derive(Debug, Clone, clap::ValueEnum, Serialize, Deserialize)]
 pub enum BorderUnit {
 	Pixel,
 	Shape,
@@ -42,8 +43,6 @@ impl std::fmt::Display for ParseBorderUnitError {
 	}
 }
 
-impl Error for ParseBorderUnitError {}
-
 impl FromStr for BorderUnit {
 	type Err = ParseBorderUnitError;
 
@@ -56,20 +55,20 @@ impl FromStr for BorderUnit {
 	}
 }
 
-#[derive(Debug, Clone, clap::ValueEnum)]
+#[derive(Debug, Clone, clap::ValueEnum, Serialize, Deserialize)]
 pub enum SvgShape {
 	Square,
 	Circle,
 }
 
 pub fn render_svg(
-	birth_info: &BirthInfo,
+	birth_info: &LifeInfo,
 	drawing_info: &DrawingInfoValidated,
 	drawing_ratios: &GridRatios,
 	week_shape: &SvgShape,
 ) -> Result<Document> {
-	let color_primary = drawing_info.color_primary.to_string();
-	let color_secondary = drawing_info.color_secondary.to_string();
+	let color_primary = drawing_info.color_primary.to_hex_string();
+	let color_secondary = drawing_info.color_secondary.to_hex_string();
 	let scale_factor = drawing_info.scale_factor;
 
 	let bday = birth_info.birthday;
