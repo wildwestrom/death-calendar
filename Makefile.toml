@@ -15,7 +15,6 @@ cargo clippy -- \
 	-D clippy::all \
 	-D clippy::pedantic \
 	-D clippy::nursery \
-	-D clippy::restriction \
 	-D clippy::cargo \
 	-A clippy::arithmetic_side_effects \
 	-A clippy::integer_arithmetic \
