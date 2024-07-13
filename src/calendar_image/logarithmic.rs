@@ -4,10 +4,7 @@ use anyhow::Result;
 use death_calendar::days_lived;
 use gregorian::Date;
 use svg::{
-	node::{
-		element::{self, Line, Marker, Polyline, Text},
-		Text as TextNode,
-	},
+	node::element::{self, Line, Marker, Polyline, Text},
 	Document, Node,
 };
 
@@ -120,14 +117,13 @@ pub fn render_svg(
 	);
 
 	document.append(
-		Text::new()
+		Text::new(label)
 			.set("x", timeline_pos_today)
 			.set("y", padding_y + (font_size_pixels / 2.0))
 			.set("stroke", color_primary.as_str())
 			.set("fill", color_primary.as_str())
 			.set("font-size", format!("{font_size_pixels}px"))
-			.set("text-anchor", "middle")
-			.add(TextNode::new(label)),
+			.set("text-anchor", "middle"),
 	);
 
 	let mut previous_x = f64::MIN;
@@ -143,14 +139,13 @@ pub fn render_svg(
 
 		let there_is_enough_space_between_lines = d_prev_curr >= gap_size && d_curr_last > gap_size;
 
-		let year_label_text = Text::new()
+		let year_label_text = Text::new(year_num.to_string())
 			.set("x", current_x)
 			.set("y", baseline_height + font_size_pixels)
 			.set("stroke", color_primary.as_str())
 			.set("fill", color_primary.as_str())
 			.set("font-size", format!("{font_size_pixels}px"))
-			.set("text-anchor", "middle")
-			.add(TextNode::new(year_num.to_string()));
+			.set("text-anchor", "middle");
 		let year_label_line = Line::new()
 			.set("x1", current_x)
 			.set("y1", baseline_height)
