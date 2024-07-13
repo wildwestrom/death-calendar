@@ -7,27 +7,7 @@
 ![build](https://github.com/wildwestrom/death-calendar/actions/workflows/build.yml/badge.svg)
 ![package](https://github.com/wildwestrom/death-calendar/actions/workflows/package.yml/badge.svg)
 
-![Example Logarithmic Calendar](./images/demo-img-log.svg)
-
-> Generated with:
->
-> ```console
-> death-calendar img 2012-5-11 --lifespan-years=99 \
-> --color-primary=64727D --color-secondary=2D3436 \
-> --scale-factor=15 -o=images/demo-img-log.svg \
-> log --width-height-ratio=8
-> ```
-
-![Example Grid Calendar](./images/demo-img-grid.svg)
-
-> Generated with:
->
-> ```console
-> death-calendar img 2012-5-11 \
-> --color-primary=64727D --color-secondary=2D3436 \
-> --scale-factor=3 -o=images/demo-img-grid.svg \
-> grid --week-shape=circle --length=8 --border=1 --border-unit=shape
-> ```
+**GTK GUI In Progress**
 
 Ever wonder how many days you have left to live?  
 Death Calendar can show you at a glance.
