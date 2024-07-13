@@ -1,7 +1,11 @@
 #![allow(clippy::default_numeric_fallback)]
 use csscolorparser::Color;
 // This is due to a false positive
-use svg::{node::element::Rectangle, Document, Node};
+use anyhow::Result;
+use svg::{
+	node::element::{Rectangle, SVG},
+	Document, Node,
+};
 
 use crate::{Drawing, DrawingInfo, DrawingInfoValidated, LifeInfo};
 
@@ -36,7 +40,7 @@ pub fn draw_calendar(
 	drawing_type: Drawing,
 	drawing_info: DrawingInfo,
 	life_info: &LifeInfo,
-) -> anyhow::Result<()> {
+) -> Result<SVG> {
 	let drawing_info_validated = DrawingInfoValidated {
 		scale_factor: drawing_info.scale_factor,
 		color_primary: drawing_info.color_primary.clone(),
@@ -44,6 +48,8 @@ pub fn draw_calendar(
 			if let Some(color) = drawing_info.color_secondary {
 				color
 			} else {
+				// TODO: Use Oklab
+				// ex `oklab(from color.primary l a b / 0.5)`
 				linear_invert_color(&drawing_info.color_primary)
 			}
 		},
@@ -64,11 +70,5 @@ pub fn draw_calendar(
 		},
 	};
 
-	#[allow(clippy::print_stdout)]
-	if let Some(filename) = drawing_info.output {
-		svg::save(filename, &document)?;
-	} else {
-		println!("{document}");
-	}
-	Ok(())
+	Ok(document)
 }

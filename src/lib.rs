@@ -125,6 +125,7 @@ pub fn years_left(today: Date, birthday: Date, lifespan_years: i16) -> i32 {
 }
 
 #[cfg(test)]
+#[allow(clippy::too_many_lines, clippy::cast_possible_truncation)]
 mod tests {
 	use super::*;
 

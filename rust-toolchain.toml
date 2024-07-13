@@ -1,2 +1,4 @@
 [toolchain]
-channel = "nightly"
+channel = "stable"
+components = ["rust-analyzer", "rust-src"]
+profile = "default"

@@ -94,7 +94,7 @@ pub fn render_svg(
         // Here I convert an i16 to a u32.
         // I'm not sure what behavior I'll get if there's a negative value going in,
         // so for now I'll just set it to zero just in case.
-        * u32::try_from(lifespan_years).unwrap_or(0);
+        * u32::from(lifespan_years);
 	let grid_height = outer_shape_size * WEEKS_IN_A_YEAR;
 
 	let viewbox_width = grid_width + (border * 2) + (padding * 2);

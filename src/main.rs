@@ -12,9 +12,10 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
 
-static QUALIFIER: &str = "xyz";
-static ORGANIZATION: &str = "Westrom";
-static APPLICATION: &str = "death-calendar";
+const QUALIFIER: &str = "xyz";
+const ORGANIZATION: &str = "Westrom";
+const APPLICATION: &str = "death-calendar";
+static APP_NAME: Lazy<String> = Lazy::new(|| format!("{QUALIFIER}.{ORGANIZATION}.{APPLICATION}"));
 
 #[derive(Debug)]
 struct ProjectDirsNotFoundError;
@@ -67,10 +68,13 @@ struct Cli {
 	command: Commands,
 	#[clap(flatten)]
 	life_info: LifeInfo,
+	/// Unknown arguments or everything after -- gets passed through to GTK.
+	#[arg(allow_hyphen_values = true, trailing_var_arg = true)]
+	pub gtk_options: Vec<String>,
 }
 
 /// Information about a person's life.
-#[derive(Parser, Debug, Serialize, Deserialize)]
+#[derive(Parser, Debug, Clone, Serialize, Deserialize)]
 pub struct LifeInfo {
 	/// A birthday in `YYYY-MM-DD` format
 	birthday: Date,
@@ -83,15 +87,13 @@ pub struct LifeInfo {
 enum Commands {
 	/// Print info about your ultimate demise
 	Info,
-	#[clap(id = "img")]
 	/// Visualize your ultimate demise
-	Image {
-		#[clap(subcommand)]
-		drawing_type: Drawing,
-		#[clap(flatten)]
-		drawing_info: DrawingInfo,
-	},
+	Gui,
 }
+
+#[non_exhaustive]
+#[derive(Parser, Debug, Serialize, Deserialize)]
+struct Gui;
 
 /// Information about how to render an image.
 #[serde_as]
@@ -117,6 +119,17 @@ pub struct DrawingInfo {
 	/// Save SVG to a file instead of printing to stdout
 	#[clap(short, long)]
 	output: Option<PathBuf>,
+}
+
+impl Default for DrawingInfo {
+	fn default() -> Self {
+		Self {
+			scale_factor: 1,
+			color_primary: Color::default(),
+			color_secondary: Some(Color::from_rgba8(255, 255, 255, 255)),
+			output: None,
+		}
+	}
 }
 
 /// Information about how to render an image with no optional fields.
@@ -165,14 +178,296 @@ pub struct GridRatios {
 	border_unit: BorderUnit,
 }
 
-fn main() -> Result<()> {
-	let cli = Cli::parse();
-	let life_info = cli.life_info;
-	match cli.command {
-		Commands::Info => death_info::show(life_info.birthday, life_info.lifespan_years),
-		Commands::Image {
-			drawing_type,
-			drawing_info,
-		} => calendar_image::draw_calendar(drawing_type, drawing_info, &life_info),
+impl Default for GridRatios {
+	fn default() -> Self {
+		Self {
+			stroke: 1,
+			padding: 1,
+			length: 15,
+			border: 3,
+			border_unit: BorderUnit::Pixel,
+		}
 	}
+}
+
+// use gtk::gio::prelude::*;
+// use gtk::glib::prelude::*;
+use adw::prelude::*;
+use gtk::gdk_pixbuf;
+// use gtk::gdk_pixbuf::prelude::*;
+// use gtk::prelude::*;
+use relm4::{
+	gtk::{gdk, glib},
+	prelude::*,
+};
+
+type ErrMsg = String;
+
+#[derive(Debug)]
+enum MaybeTexture {
+	Texture(gdk::Texture),
+	None(ErrMsg),
+}
+
+#[derive(Debug)]
+enum AppMsg {
+	UpdateBirthday(Date),
+	UpdateLifespan(u16),
+}
+
+const MARGIN: i32 = 5;
+const DEFAULT_HEIGHT: i32 = 480;
+const DEFAULT_WIDTH: i32 = 360;
+
+#[derive(Debug)]
+struct CalendarPic {
+	image_texture: MaybeTexture,
+}
+
+impl Default for CalendarPic {
+	fn default() -> Self {
+		Self {
+			image_texture: MaybeTexture::None("No image loaded yet".into()),
+		}
+	}
+}
+
+impl CalendarPic {
+	fn new_texture(life_info: &LifeInfo, drawing_type: Drawing) -> MaybeTexture {
+		let res: Result<gdk::Texture> = (|| {
+			let svg =
+				calendar_image::draw_calendar(drawing_type, DrawingInfo::default(), life_info)?;
+			let loader = gdk_pixbuf::PixbufLoader::with_type("svg")?;
+			let svg_bytes = glib::Bytes::from(svg.to_string().as_bytes());
+			loader.write_bytes(&svg_bytes)?;
+			loader.close()?;
+			let texture = gdk::Texture::from_bytes(&svg_bytes)?;
+			Ok(texture)
+		})();
+		match res {
+			Ok(texture) => MaybeTexture::Texture(texture),
+			Err(e) => MaybeTexture::None(format!("Could not create an image:\n{e}")),
+		}
+	}
+}
+
+struct NewCalendarPic(LifeInfo, Drawing);
+
+#[relm4::component]
+impl SimpleComponent for CalendarPic {
+	type Input = LifeInfo;
+	type Output = ();
+	type Init = NewCalendarPic;
+
+	view! {
+		#[root]
+		gtk::Box {
+			set_margin_all: MARGIN,
+			set_orientation: gtk::Orientation::Vertical,
+			gtk::Label {
+				#[watch]
+				set_label: match model.image_texture {
+					MaybeTexture::Texture(_) => "",
+					MaybeTexture::None(ref e) => e,
+				}
+			},
+			append =
+				&gtk::Picture::builder()
+					.height_request(match model.image_texture {
+						MaybeTexture::Texture(ref t) => t.height().min(50),
+						MaybeTexture::None(_) => 0,
+					})
+					.width_request(match model.image_texture {
+						MaybeTexture::Texture(ref t) => t.width().min(DEFAULT_WIDTH),
+						MaybeTexture::None(_) => 0,
+					})
+					.margin_start(MARGIN)
+					.margin_end(MARGIN)
+					.margin_top(MARGIN)
+					.margin_bottom(MARGIN)
+					.overflow(gtk::Overflow::Visible)
+					.content_fit(gtk::ContentFit::Contain)
+					.build() {
+						#[watch]
+						set_paintable:
+							match model.image_texture {
+									MaybeTexture::Texture(ref t) => Some(t),
+									MaybeTexture::None(ref _s) => None,
+							},
+			},
+			gtk::Button {
+				set_label: "Export Image:",
+			}
+		}
+	}
+
+	fn init(
+		init: Self::Init,
+		root: Self::Root,
+		_sender: ComponentSender<Self>,
+	) -> ComponentParts<Self> {
+		let model = Self {
+			image_texture: Self::new_texture(&init.0, init.1),
+		};
+		let widgets = view_output!();
+		ComponentParts { model, widgets }
+	}
+}
+
+#[derive(Debug)]
+struct App {
+	life_info: LifeInfo,
+	calendar_pic_grid: Controller<CalendarPic>,
+	calendar_pic_log: Controller<CalendarPic>,
+}
+
+#[relm4::component]
+impl SimpleComponent for App {
+	type Init = LifeInfo;
+	type Input = AppMsg;
+	type Output = ();
+
+	view! {
+		adw::ApplicationWindow {
+			set_title: Some("Death Calendar"),
+			set_default_size: (DEFAULT_WIDTH, DEFAULT_HEIGHT),
+			set_size_request: (DEFAULT_WIDTH, DEFAULT_HEIGHT),
+			set_decorated: false,
+			adw::ToolbarView {
+				set_top_bar_style: adw::ToolbarStyle::Raised,
+				add_top_bar = &adw::HeaderBar {
+					#[wrap(Some)]
+					set_title_widget = &adw::WindowTitle::new("Death Calendar","Visualize your demise"),
+					set_show_title: true,
+				},
+				#[wrap(Some)]
+				set_content = &gtk::ScrolledWindow {
+					adw::Clamp {
+						set_maximum_size: 1080,
+						set_tightening_threshold: 480,
+						gtk::Box {
+							set_orientation: gtk::Orientation::Vertical,
+							set_margin_all: MARGIN,
+							set_halign: gtk::Align::Start,
+							set_hexpand: false,
+							set_vexpand: false,
+							gtk::Calendar::builder()
+								.day(model.life_info.birthday.day().into())
+								.month(model.life_info.birthday.month().to_number().into())
+								.year(model.life_info.birthday.year().to_number().into())
+								.margin_top(MARGIN)
+								.margin_bottom(MARGIN)
+								.margin_start(MARGIN)
+								.margin_end(MARGIN)
+								.hexpand(true)
+								.build() {
+								connect_day_selected[sender] => move |calendar| {
+									if let Ok(new_calendar) = Date::new(
+										calendar.year() as i16,
+										(calendar.month() + 1) as u8, // GTK gives a number from 0-11.
+										calendar.day() as u8,
+									) {
+										sender
+											.input(AppMsg::UpdateBirthday(new_calendar));
+									}
+								}
+							},
+							gtk::Label {
+								set_halign: gtk::Align::Start,
+								set_margin_all: MARGIN,
+								#[watch]
+								set_text: &format!("Your birthday is {}.", &model.life_info.birthday),
+							},
+							gtk::Separator {
+								set_margin_all: MARGIN,
+							},
+							gtk::Box {
+								set_orientation: gtk::Orientation::Horizontal,
+								set_halign: gtk::Align::Start,
+								set_margin_all: MARGIN,
+								adw::EntryRow {
+									#[watch]
+									set_title: "Number of years expected to live:",
+									set_text: &model.life_info.lifespan_years.to_string(),
+									// set_placeholder_text: Some("Nubmer of years"),
+									connect_changed[sender] => move |entry| {
+										if let Ok(years) = entry.text().parse::<u16>() {
+											sender.input(AppMsg::UpdateLifespan(years))
+										}
+									}
+								}
+							},
+							gtk::Label {
+								set_halign: gtk::Align::Start,
+								set_margin_all: MARGIN,
+								#[watch]
+								set_text: &match death_info::info(model.life_info.birthday, model.life_info.lifespan_years) {
+										Ok(info) => info,
+										Err(e) => format!("Unable to show info: {e}"),
+									}
+							},
+							model.calendar_pic_grid.widget(),
+							model.calendar_pic_log.widget(),
+						}
+					}
+				},
+			},
+		}
+	}
+
+	// Initialize the component.
+	fn init(
+		life_info: Self::Init,
+		root: Self::Root,
+		sender: ComponentSender<Self>,
+	) -> ComponentParts<Self> {
+		let calendar_pic_grid = CalendarPic::builder()
+			.launch(NewCalendarPic(
+				life_info.clone(),
+				Drawing::Grid {
+					grid_ratios: GridRatios::default(),
+					week_shape: SvgShape::Square,
+				},
+			))
+			.forward(sender.input_sender(), |msg| match msg {
+				_ => todo!(),
+			});
+		let calendar_pic_log = CalendarPic::builder()
+			.launch(NewCalendarPic(
+				life_info.clone(),
+				Drawing::Logarithmic {
+					width_height_ratio: 8.0,
+				},
+			))
+			.forward(sender.input_sender(), |msg| match msg {
+				_ => todo!(),
+			});
+
+		let model = Self {
+			life_info: life_info.clone(),
+			calendar_pic_grid,
+			calendar_pic_log,
+		};
+		let widgets = view_output!();
+		ComponentParts { model, widgets }
+	}
+
+	fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
+		match msg {
+			Self::Input::UpdateBirthday(new_birthday) => {
+				self.life_info.birthday = new_birthday;
+			},
+			Self::Input::UpdateLifespan(years) => {
+				self.life_info.lifespan_years = years;
+			},
+		}
+	}
+}
+
+fn main() {
+	let app = RelmApp::new(&APP_NAME);
+	app.run::<App>(LifeInfo {
+		birthday: Date::new(2000, 1, 1).unwrap(),
+		lifespan_years: 100,
+	});
 }

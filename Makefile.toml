@@ -11,7 +11,7 @@ args = ["test"]
 # Lint
 [tasks.lint]
 script = '''
-cargo clippy -- \
+cargo clippy --all-targets -- \
 	-D clippy::all \
 	-D clippy::pedantic \
 	-D clippy::nursery \
@@ -27,7 +27,8 @@ cargo clippy -- \
 	-A clippy::std_instead_of_core \
 	-A clippy::mod_module_files \
 	-A clippy::option_if_let_else \
-	-A clippy::missing_trait_methods
+	-A clippy::missing_trait_methods \
+	-A clippy::allow_attributes_without_reason
 '''
 
 # Format

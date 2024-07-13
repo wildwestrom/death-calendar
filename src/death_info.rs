@@ -5,30 +5,41 @@ use death_calendar::{
 };
 use gregorian::Date;
 
-#[allow(clippy::print_stdout)]
 #[allow(clippy::uninlined_format_args)]
-pub fn show(bday: Date, lifespan_years: u16) -> Result<()> {
-	let years: i16 = lifespan_years.try_into()?;
-	let today: Date = Date::today_utc();
-	println!("Your birthday is {}.", bday);
-	println!();
-	println!("You will live for approximately:");
-	println!("- {} days", lifespan_days(bday, years));
-	println!("- {} weeks", lifespan_weeks(years));
-	println!("- {} months", lifespan_months(years));
-	println!("- {} years", years);
-	println!();
-	println!("You will probably die around {}.", death_day(bday, years));
-	println!("You have lived for:");
-	println!("- {} days", days_lived(today, bday));
-	println!("- {} weeks", weeks_lived(today, bday));
-	println!("- {} months", months_lived(today, bday));
-	println!("- {} years", years_lived(today, bday));
-	println!();
-	println!("You have remaining:");
-	println!("- {} days", days_left(today, bday, years).abs());
-	println!("- {} weeks", weeks_left(today, bday, years).abs());
-	println!("- {} months", months_left(today, bday, years).abs());
-	println!("- {} years", years_left(today, bday, years).abs());
-	Ok(())
+pub fn info(bday: Date, lifespan_years: u16) -> Result<String> {
+	let years = lifespan_years.try_into()?;
+	let today = Date::today_utc();
+	Ok(format!(
+		r#"You will live for approximately:
+• {lifespan_days} days
+• {lifespan_weeks} weeks
+• {lifespan_months} months
+• {years} years
+
+You will probably die around {death_day}.
+
+You have lived for:
+• {days_lived} days
+• {weeks_lived} weeks
+• {months_lived} months
+• {years_lived} years
+
+You have remaining:
+• {days_left} days
+• {weeks_left} weeks
+• {months_left} months
+• {years_left} years"#,
+		lifespan_days = lifespan_days(bday, years),
+		lifespan_weeks = lifespan_weeks(years),
+		lifespan_months = lifespan_months(years),
+		death_day = death_day(bday, years),
+		days_lived = days_lived(today, bday),
+		weeks_lived = weeks_lived(today, bday),
+		months_lived = months_lived(today, bday),
+		years_lived = years_lived(today, bday),
+		days_left = days_left(today, bday, years).abs(),
+		weeks_left = weeks_left(today, bday, years).abs(),
+		months_left = months_left(today, bday, years).abs(),
+		years_left = years_left(today, bday, years).abs(),
+	))
 }
