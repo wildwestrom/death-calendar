@@ -1,7 +1,10 @@
-/target
-*.svg
-!/images/*.svg
 .devenv
 .direnv
 .envrc
+
 .idea
+
+/target
+
+*.svg
+!/images/*.svg
