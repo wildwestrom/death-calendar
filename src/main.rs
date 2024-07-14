@@ -321,6 +321,15 @@ struct App {
 	calendar_pic_log: Controller<CalendarPic>,
 }
 
+fn gtk_cal_to_date(date: &gtk::Calendar) -> Result<gregorian::Date> {
+	let new_date = Date::new(
+		i16::try_from(date.year())?,
+		u8::try_from(date.month() + 1)?, // GTK gives a number from 0-11.
+		u8::try_from(date.day())?,
+	)?;
+	Ok(new_date)
+}
+
 #[relm4::component]
 impl SimpleComponent for App {
 	type Init = LifeInfo;
@@ -362,11 +371,7 @@ impl SimpleComponent for App {
 								.hexpand(true)
 								.build() {
 								connect_day_selected[sender] => move |calendar| {
-									if let Ok(new_calendar) = Date::new(
-										calendar.year() as i16,
-										(calendar.month() + 1) as u8, // GTK gives a number from 0-11.
-										calendar.day() as u8,
-									) {
+									if let Ok(new_calendar) = gtk_cal_to_date(calendar) {
 										sender
 											.input(AppMsg::UpdateBirthday(new_calendar));
 									}
@@ -392,7 +397,7 @@ impl SimpleComponent for App {
 									// set_placeholder_text: Some("Nubmer of years"),
 									connect_changed[sender] => move |entry| {
 										if let Ok(years) = entry.text().parse::<u16>() {
-											sender.input(AppMsg::UpdateLifespan(years))
+											sender.input(AppMsg::UpdateLifespan(years));
 										}
 									}
 								}
@@ -401,10 +406,7 @@ impl SimpleComponent for App {
 								set_halign: gtk::Align::Start,
 								set_margin_all: MARGIN,
 								#[watch]
-								set_text: &match death_info::info(model.life_info.birthday, model.life_info.lifespan_years) {
-										Ok(info) => info,
-										Err(e) => format!("Unable to show info: {e}"),
-									}
+								set_text: &death_info::info(model.life_info.birthday, model.life_info.lifespan_years),
 							},
 							model.calendar_pic_grid.widget(),
 							model.calendar_pic_log.widget(),
@@ -421,6 +423,8 @@ impl SimpleComponent for App {
 		root: Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
+		let todays_date = |(): Self::Output| AppMsg::UpdateBirthday(gregorian::Date::today());
+
 		let calendar_pic_grid = CalendarPic::builder()
 			.launch(NewCalendarPic(
 				life_info.clone(),
@@ -429,9 +433,7 @@ impl SimpleComponent for App {
 					week_shape: SvgShape::Square,
 				},
 			))
-			.forward(sender.input_sender(), |msg| match msg {
-				_ => todo!(),
-			});
+			.forward(sender.input_sender(), todays_date);
 		let calendar_pic_log = CalendarPic::builder()
 			.launch(NewCalendarPic(
 				life_info.clone(),
@@ -439,12 +441,10 @@ impl SimpleComponent for App {
 					width_height_ratio: 8.0,
 				},
 			))
-			.forward(sender.input_sender(), |msg| match msg {
-				_ => todo!(),
-			});
+			.forward(sender.input_sender(), todays_date);
 
 		let model = Self {
-			life_info: life_info.clone(),
+			life_info,
 			calendar_pic_grid,
 			calendar_pic_log,
 		};
