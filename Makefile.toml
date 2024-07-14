@@ -16,8 +16,8 @@ cargo clippy --all-targets -- \
 	-D clippy::pedantic \
 	-D clippy::nursery \
 	-D clippy::cargo \
+	-D clippy::style \
 	-A clippy::arithmetic_side_effects \
-	-A clippy::integer_arithmetic \
 	-A clippy::integer_division \
 	-A clippy::float_arithmetic \
 	-A clippy::cast_precision_loss \
