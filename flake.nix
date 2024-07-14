@@ -24,7 +24,6 @@
       {
         devShells.default = mkShell {
           buildInputs = [
-            bacon
             cargo-make
             pkg-config
             wrapGAppsHook4 # this is needed for relm4-icons to properly load after gtk::init()
