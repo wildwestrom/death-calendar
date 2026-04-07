@@ -4,11 +4,11 @@ use anyhow::Result;
 use death_calendar::days_lived;
 use gregorian::Date;
 use svg::{
-	node::element::{self, Line, Marker, Polyline, Text},
 	Document, Node,
+	node::element::{self, Line, Marker, Polyline, Text},
 };
 
-use super::{init_document, AVERAGE_DAYS_IN_YEAR, PHI};
+use super::{AVERAGE_DAYS_IN_YEAR, PHI, init_document};
 use crate::{DrawingInfoValidated, LifeInfo};
 
 fn position_from_0_to_1(lifespan: u16, inc: f64) -> f64 {
@@ -48,8 +48,8 @@ pub fn render_svg(
 	drawing_info: &DrawingInfoValidated,
 	width_to_height_ratio: f64,
 ) -> Result<Document> {
-	let color_primary = drawing_info.color_primary.to_hex_string();
-	let color_secondary = drawing_info.color_secondary.to_hex_string();
+	let color_primary = drawing_info.color_primary.to_css_hex();
+	let color_secondary = drawing_info.color_secondary.to_css_hex();
 	let scale_factor = drawing_info.scale_factor;
 
 	let bday = common_args.birthday;

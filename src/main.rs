@@ -4,13 +4,13 @@ mod calendar_image;
 mod death_info;
 use anyhow::Result;
 use calendar_image::grid::{BorderUnit, SvgShape};
-use clap::{value_parser, Parser};
-use csscolorparser::{parse as parse_css_color, Color};
+use clap::{Parser, value_parser};
+use csscolorparser::{Color, parse as parse_css_color};
 use directories::ProjectDirs;
 use gregorian::Date;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use serde_with::{serde_as, DisplayFromStr};
+use serde_with::{DisplayFromStr, serde_as};
 
 static QUALIFIER: &str = "xyz";
 static ORGANIZATION: &str = "Westrom";

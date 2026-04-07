@@ -1,8 +1,7 @@
 {
-  description = "A basic Rust devshell for NixOS users developing gtk/libadwaita apps";
+  description = "Death Calendar";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-utils.url = "github:numtide/flake-utils";
   };
@@ -18,7 +17,14 @@
       system:
       let
         overlays = [ (import rust-overlay) ];
-        pkgs = import nixpkgs { inherit system overlays; };
+        pkgs = nixpkgs.legacyPackages.${system}.extend (
+          final: prev: {
+            rustPkgs = import nixpkgs {
+              inherit system overlays;
+            };
+          }
+        );
+        rust-toolchain = pkgs.rustPkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
       in
       with pkgs;
       {
@@ -30,8 +36,7 @@
             wrapGAppsHook4 # this is needed for relm4-icons to properly load after gtk::init()
             libadwaita
             fontconfig
-
-            (rust-bin.fromRustupToolchainFile ./rust-toolchain.toml)
+            rust-toolchain
           ];
 
           shellHook = ''
